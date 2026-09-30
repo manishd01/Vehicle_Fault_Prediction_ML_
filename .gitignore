@@ -23,8 +23,7 @@ ENV/
 # Raw / External / Processed Data
 # ============================================================
 data/raw/
-data/external/
-data/processed/
+
 
 # Service-level generated data
 services/*/data/
