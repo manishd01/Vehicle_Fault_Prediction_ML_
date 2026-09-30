@@ -1,0 +1,59 @@
+# docker build -t vehicle-fault-pyspark ./services/pyspark
+
+services:
+  ml-training:
+    build:
+      context: ./services/ml-training
+    image: vehicle-fault-training
+    container_name: vehicle-fault-training
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./pipelines:/app/pipelines
+      - ./configs:/app/configs
+      - ./services/ml-training:/app
+    working_dir: /app
+
+  api:
+    build:
+      context: ./services/api
+    image: vehicle-fault-api
+    container_name: vehicle-fault-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./services/api:/app
+    depends_on:
+      - ml-training
+
+  pyspark:
+    build:
+      context: ./services/pyspark
+    image: vehicle-fault-pyspark
+    container_name: vehicle-fault-pyspark
+    environment:
+      CSV_PATH: ${CSV_PATH}
+      PARQUET_PATH: ${PARQUET_PATH}
+      DATA_ROOT: ${DATA_ROOT}
+
+    volumes:
+      - ./data:/app/data
+      - ./pipelines:/app/pipelines
+      - ./services/pyspark:/app #main contianer volume
+    working_dir: /app
+    command: tail -f /dev/null
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest #built, third party using..  Pull prebuilt image
+    container_name: vehicle-fault-mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlflow-data:/mlruns
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlruns/mlflow.db
+      --default-artifact-root /mlruns
