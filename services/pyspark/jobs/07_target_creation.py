@@ -70,7 +70,7 @@ df = df.withColumn("fault_label", when(fault_condition, lit(1)).otherwise(lit(0)
 # CREATE FAILURE ID
 # ==============================
 
-failure_id_expression = lit(0)
+failure_id_expression = lit("NO_FAILURE")
 
 for failure_id, start_time, end_time in failure_windows:
 
@@ -84,7 +84,6 @@ for failure_id, start_time, end_time in failure_windows:
 
 
 df = df.withColumn("failure_id", failure_id_expression)
-
 
 # ==============================
 # TARGET DISTRIBUTION
