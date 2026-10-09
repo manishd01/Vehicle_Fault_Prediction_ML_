@@ -13,3 +13,5 @@ onnxruntime
 skl2onnx
 mlflow
 pytest
+
+torch

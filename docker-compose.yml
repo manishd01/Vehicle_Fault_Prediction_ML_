@@ -13,6 +13,7 @@ services:
       - ./configs:/app/configs
       - ./services/ml-training:/app
     working_dir: /app
+    command: ["tail", "-f", "/dev/null"]
 
   api:
     build:
@@ -26,6 +27,7 @@ services:
       - ./services/api:/app
     depends_on:
       - ml-training
+    command: ["tail", "-f", "/dev/null"]
 
   pyspark:
     build:
@@ -57,3 +59,4 @@ services:
       --port 5000
       --backend-store-uri sqlite:///mlruns/mlflow.db
       --default-artifact-root /mlruns
+    # command: ["tail", "-f", "/dev/null"]
