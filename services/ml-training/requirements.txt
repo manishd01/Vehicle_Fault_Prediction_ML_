@@ -1,3 +1,4 @@
+
 numpy
 pandas
 scipy
@@ -5,9 +6,10 @@ scikit-learn
 matplotlib
 seaborn
 openpyxl
-
+joblib
+pyarrow
 onnx
 onnxruntime
-tf2onnx
-
+skl2onnx
+mlflow
 pytest
