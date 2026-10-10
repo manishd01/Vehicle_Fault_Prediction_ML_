@@ -5,21 +5,25 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy dependencies first for layer caching
+# Keep this layer independent of source-code changes
 COPY requirements.txt .
 
-# Reuse downloaded packages across builds
-RUN --mount=type=cache,target=/root/.cache/pip \
-    python -m pip install --upgrade pip \
-    && python -m pip install -r requirements.txt
+# Cache downloaded Python packages persistently in BuildKit
+RUN --mount=type=cache,id=vehicle-fault-pip-cache,target=/root/.cache/pip,sharing=locked \
+    python -m pip install --upgrade pip && \
+    python -m pip install -r requirements.txt
 
-# Copy project files
+# Install CPU-only PyTorch using the same cache
+RUN --mount=type=cache,id=vehicle-fault-pip-cache,target=/root/.cache/pip,sharing=locked \
+    python -m pip install torch \
+    --index-url https://download.pytorch.org/whl/cpu
+
+# Source code changes should not invalidate dependency layers
 COPY . .
 
 ENV PYTHONPATH=/app
 
 CMD ["bash"]
-
 
 
 # FROM python:3.11-slim
