@@ -1,0 +1,33 @@
+{
+  "run_id": "20261017T143409308122Z",
+  "status": "FAILED",
+  "started_at_utc": "2026-10-17T14:34:09.315724+00:00",
+  "finished_at_utc": "2026-10-17T14:34:47.444993+00:00",
+  "elapsed_seconds_this_invocation": 38.14,
+  "last_completed_stage": 0,
+  "next_stage": 1,
+  "stages": {
+    "1": {
+      "number": 1,
+      "name": "Data ingestion",
+      "status": "FAILED",
+      "attempts": 1,
+      "started_at_utc": "2026-10-17T14:34:11.101285+00:00",
+      "code_sha256": "ceb5fcaa9774e6e246c00d49c39d883871e5cd750908d59d37ed9df260b5c173",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\processed\\metropt"
+      ],
+      "error": "Command exited with code 1.\nWARNING: Using incubator modules: jdk.incubator.vector\nUsing Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties\nSetting default log level to \"WARN\".\nTo adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).\n/usr/local/lib/python3.11/site-packages/pyspark/testing/utils.py:127: FutureWarning: PySpark does not yet fully support pandas >= 3.0.0. Some features may not work correctly. It is recommended to use pandas < 3.0.0 for now.\n  require_minimum_pandas_version()\n26/10/17 14:34:14 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable\nCSV_PATH: '/app/data/pipeline_runs/20261017T143409308122Z/input.csv'\nFirst 16 bytes: b'PK\\x03\\x04\\x14\\x00\\x06\\x00\\x08\\x00\\x00\\x00!\\x00b\\xee'\nDetected file format: excel\nInput file: /app/data/pipeline_runs/20261017T143409308122Z/input.csv\nFile extension: .csv\nTraceback (most recent call last):\n  File \"/usr/local/lib/python3.11/site-packages/pandas/compat/_optional.py\", line 158, in import_optional_dependency\n    module = importlib.import_module(name)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap>\", line 1204, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1176, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 1140, in _find_and_load_unlocked\nModuleNotFoundError: No module named 'openpyxl'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/app/jobs/01_ingest.py\", line 56, in <module>\n    pandas_df = pd.read_excel(input_file)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/pandas/io/excel/_base.py\", line 481, in read_excel\n    io = ExcelFile(\n         ^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/pandas/io/excel/_base.py\", line 1621, in __init__\n    self._reader = self._engines[engine](\n                   ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/pandas/io/excel/_openpyxl.py\", line 559, in __init__\n    import_optional_dependency(\"openpyxl\")\n  File \"/usr/local/lib/python3.11/site-packages/pandas/compat/_optional.py\", line 161, in import_optional_dependency\n    raise ImportError(msg) from err\nImportError: `Import openpyxl` failed.  Use pip or conda to install the openpyxl package.\n",
+      "finished_at_utc": "2026-10-17T14:34:47.428464+00:00",
+      "elapsed_seconds": 36.32
+    }
+  },
+  "input": {
+    "path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261017T143409308122Z\\input.csv",
+    "sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a",
+    "csv_path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261017T143409308122Z\\input.csv",
+    "excel_sheet": null,
+    "csv_sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a"
+  },
+  "failure": "Command exited with code 1.\nWARNING: Using incubator modules: jdk.incubator.vector\nUsing Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties\nSetting default log level to \"WARN\".\nTo adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).\n/usr/local/lib/python3.11/site-packages/pyspark/testing/utils.py:127: FutureWarning: PySpark does not yet fully support pandas >= 3.0.0. Some features may not work correctly. It is recommended to use pandas < 3.0.0 for now.\n  require_minimum_pandas_version()\n26/10/17 14:34:14 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable\nCSV_PATH: '/app/data/pipeline_runs/20261017T143409308122Z/input.csv'\nFirst 16 bytes: b'PK\\x03\\x04\\x14\\x00\\x06\\x00\\x08\\x00\\x00\\x00!\\x00b\\xee'\nDetected file format: excel\nInput file: /app/data/pipeline_runs/20261017T143409308122Z/input.csv\nFile extension: .csv\nTraceback (most recent call last):\n  File \"/usr/local/lib/python3.11/site-packages/pandas/compat/_optional.py\", line 158, in import_optional_dependency\n    module = importlib.import_module(name)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<frozen importlib._bootstrap>\", line 1204, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1176, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 1140, in _find_and_load_unlocked\nModuleNotFoundError: No module named 'openpyxl'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/app/jobs/01_ingest.py\", line 56, in <module>\n    pandas_df = pd.read_excel(input_file)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/pandas/io/excel/_base.py\", line 481, in read_excel\n    io = ExcelFile(\n         ^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/pandas/io/excel/_base.py\", line 1621, in __init__\n    self._reader = self._engines[engine](\n                   ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/site-packages/pandas/io/excel/_openpyxl.py\", line 559, in __init__\n    import_optional_dependency(\"openpyxl\")\n  File \"/usr/local/lib/python3.11/site-packages/pandas/compat/_optional.py\", line 161, in import_optional_dependency\n    raise ImportError(msg) from err\nImportError: `Import openpyxl` failed.  Use pip or conda to install the openpyxl package.\n"
+}

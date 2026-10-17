@@ -61,8 +61,41 @@ print(train_df["fault_label"].value_counts().sort_index())
 print("\nValidation target distribution:")
 print(validation_df["fault_label"].value_counts().sort_index())
 
-if train_df["fault_label"].nunique() != 2:
-    raise ValueError("Training data must contain both normal and fault examples.")
+# if train_df["fault_label"].nunique() != 2:
+#     raise ValueError("Training data must contain both normal and fault examples.")
+
+# if validation_df.empty:
+#     raise ValueError("Validation dataset is empty.")
+# //better way: handling other case, like, in logictic regesion only one case is there
+# another case not present:
+# ============================================================
+# HANDLE MISSING CLASSES SAFELY
+# ============================================================
+
+train_classes = sorted(train_df["fault_label"].unique().tolist())
+
+if len(train_classes) < 2 or not {0, 1}.issubset(set(train_classes)):
+    normal_count = int((train_df["fault_label"] == 0).sum())
+    fault_count = int((train_df["fault_label"] == 1).sum())
+
+    metrics = {
+        "model": "random_forest",
+        "status": "skipped",
+        "reason": "Training data must contain both normal and fault examples.",
+        "training_rows": int(len(train_df)),
+        "normal_rows": normal_count,
+        "fault_rows": fault_count,
+    }
+
+    with open(METRICS_PATH, "w", encoding="utf-8") as file:
+        json.dump(metrics, file, indent=4)
+
+    print("TRAINING SKIPPED: Training data does not contain both classes.")
+    print(f"Normal rows: {normal_count}")
+    print(f"Fault rows: {fault_count}")
+    print("Metrics saved:", METRICS_PATH)
+    print("No Random Forest model was trained or saved.")
+    raise SystemExit(0)
 
 if validation_df.empty:
     raise ValueError("Validation dataset is empty.")

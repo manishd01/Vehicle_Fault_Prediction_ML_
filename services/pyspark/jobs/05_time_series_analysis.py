@@ -40,35 +40,50 @@ df.select(max("timestamp")).show()
 # ============================================
 # 2. UNDERSTAND _c0
 # ============================================
+# 2. INDEX COLUMN ANALYSIS
 
-print("\n========== _c0 ANALYSIS ==========")
+print("\n========== INDEX COLUMN ANALYSIS ==========")
 
-index_stats = df.select(
-    min("_c0").alias("min_index"),
-    max("_c0").alias("max_index"),
-    count("_c0").alias("row_count"),
-    sum(col("_c0")).alias("actual_sum"),
-).first()
+index_col = next(
+    (name for name in ["_c0", "Unnamed: 0"] if name in df.columns),
+    None,
+)
 
-row_count = index_stats["row_count"]
-min_index = index_stats["min_index"]
-max_index = index_stats["max_index"]
-actual_sum = index_stats["actual_sum"]
+if index_col is not None:
+    index_stats = df.select(
+        min(col(index_col)).alias("min_index"),
+        max(col(index_col)).alias("max_index"),
+        count(col(index_col)).alias("row_count"),
+        sum(col(index_col).cast("double")).alias("actual_sum"),
+    ).first()
 
-expected_sum = row_count * (min_index + max_index) / 2
+    row_count = index_stats["row_count"]
+    min_index = index_stats["min_index"]
+    max_index = index_stats["max_index"]
+    actual_sum = index_stats["actual_sum"]
 
-print("Min _c0:", min_index)
-print("Max _c0:", max_index)
-print("Rows:", row_count)
-print("Actual sum:", actual_sum)
-print("Expected arithmetic-sequence sum:", expected_sum)
+    print("Index column:", index_col)
+    print("Minimum index:", min_index)
+    print("Maximum index:", max_index)
+    print("Non-null index rows:", row_count)
+    print("Actual sum:", actual_sum)
 
-if actual_sum == expected_sum:
-    print("_c0 follows an arithmetic progression " "between its minimum and maximum.")
+    if (
+        row_count > 0
+        and min_index is not None
+        and max_index is not None
+        and actual_sum is not None
+    ):
+        expected_sum = row_count * (min_index + max_index) / 2
+
+        print("Expected arithmetic-sequence sum:", expected_sum)
+
+        if actual_sum == expected_sum:
+            print("Index sum matches the expected arithmetic-sequence sum.")
+        else:
+            print("Index sum does not match the expected arithmetic-sequence sum.")
 else:
-    print("_c0 does not follow a simple arithmetic progression.")
-
-
+    print("No index column found. Skipping index analysis.")
 # ============================================
 # 3. TIMESTAMP GAP ANALYSIS
 # ============================================
@@ -160,37 +175,24 @@ for column in flag_columns:
 
 print("\n========== TIMESTAMP ORDER CHECK ==========")
 
-first_rows = (
-    df.orderBy("timestamp")
-    .select(
-        "timestamp",
-        "_c0",
-        "TP2",
-        "TP3",
-        "Oil_temperature",
-        "Motor_current",
-    )
-    .limit(10)
-)
+display_columns = [
+    "timestamp",
+    "TP2",
+    "TP3",
+    "Oil_temperature",
+    "Motor_current",
+]
 
+if index_col is not None:
+    display_columns.insert(1, index_col)
+
+first_rows = df.orderBy("timestamp").select(*display_columns).limit(10)
 first_rows.show(truncate=False)
 
 
 print("\n========== LAST ROWS ==========")
 
-last_rows = (
-    df.orderBy(col("timestamp").desc())
-    .select(
-        "timestamp",
-        "_c0",
-        "TP2",
-        "TP3",
-        "Oil_temperature",
-        "Motor_current",
-    )
-    .limit(10)
-)
-
+last_rows = df.orderBy(col("timestamp").desc()).select(*display_columns).limit(10)
 last_rows.show(truncate=False)
 
 

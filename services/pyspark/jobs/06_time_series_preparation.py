@@ -143,6 +143,8 @@ df = df.orderBy("timestamp")
 
 
 # ============================================
+
+# ============================================
 # 11. VERIFY ORDER
 # ============================================
 
@@ -150,14 +152,14 @@ print("\n========== FIRST RECORDS ==========")
 
 df.select(
     "timestamp",
-    "_c0",
+    "Unnamed: 0",
 ).show(10, truncate=False)
 
 print("\n========== LAST RECORDS ==========")
 
 df.orderBy(col("timestamp").desc()).select(
     "timestamp",
-    "_c0",
+    "Unnamed: 0",
 ).show(10, truncate=False)
 
 

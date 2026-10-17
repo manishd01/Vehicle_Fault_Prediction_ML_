@@ -1,0 +1,25 @@
+services:
+    ml-training:
+        container_name: vehicle-fault-training-sample-20261016t134940082394z
+        environment:
+            PYTHONDONTWRITEBYTECODE: "1"
+        volumes:
+            - ./data_Sample:/app/data
+            - ./data_Sample/models:/app/models
+    api:
+        container_name: vehicle-fault-api-sample-20261016t134940082394z
+        ports: !override
+            - "8001:8000"
+        volumes:
+            - ./data_Sample/models/onnx:/app/models/onnx:ro
+    pyspark:
+        container_name: vehicle-fault-pyspark-sample-20261016t134940082394z
+        environment:
+            PYTHONDONTWRITEBYTECODE: "1"
+        volumes:
+            - ./data_Sample:/app/data
+    mlflow:
+        container_name: vehicle-fault-mlflow-sample-20261016t134940082394z
+        ports: !override []
+        volumes:
+            - ./data_Sample/mlflow-data:/mlruns

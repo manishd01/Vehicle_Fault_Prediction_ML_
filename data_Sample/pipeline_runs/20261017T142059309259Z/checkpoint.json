@@ -1,0 +1,36 @@
+{
+  "run_id": "20261017T142059309259Z",
+  "status": "FAILED",
+  "started_at_utc": "2026-10-17T14:20:59.315169+00:00",
+  "updated_at_utc": "2026-10-17T14:21:48.668750+00:00",
+  "input": {
+    "path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261017T142059309259Z\\input.csv",
+    "sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a",
+    "csv_path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261017T142059309259Z\\input.csv",
+    "excel_sheet": null,
+    "csv_sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a"
+  },
+  "last_completed_stage": 0,
+  "next_stage": 1,
+  "stages": {
+    "1": {
+      "number": 1,
+      "name": "Data ingestion",
+      "status": "FAILED",
+      "attempts": 1,
+      "started_at_utc": "2026-10-17T14:21:01.125447+00:00",
+      "code_sha256": "d198cac06b68f8d4f55ba16eeacae2714fa5623b4bcfb293a400d102e0e4dc2a",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\processed\\metropt"
+      ],
+      "error": "Command exited with code 1.\nWARNING: Using incubator modules: jdk.incubator.vector\nUsing Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties\nSetting default log level to \"WARN\".\nTo adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).\n/usr/local/lib/python3.11/site-packages/pyspark/testing/utils.py:127: FutureWarning: PySpark does not yet fully support pandas >= 3.0.0. Some features may not work correctly. It is recommended to use pandas < 3.0.0 for now.\n  require_minimum_pandas_version()\n26/10/17 14:21:15 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable\nTraceback (most recent call last):\n  File \"/app/jobs/01_ingest.py\", line 20, in <module>\nCSV_PATH: '/app/data/pipeline_runs/20261017T142059309259Z/input.csv'\nFirst 16 bytes: b'PK\\x03\\x04\\x14\\x00\\x06\\x00\\x08\\x00\\x00\\x00!\\x00b\\xee'\n    raise ValueError(\nValueError: ERROR: /app/data/pipeline_runs/20261017T142059309259Z/input.csv contains ZIP/Excel-style binary data, not a normal CSV file.\n",
+      "finished_at_utc": "2026-10-17T14:21:48.657926+00:00",
+      "elapsed_seconds": 47.53
+    }
+  },
+  "failure": {
+    "stage": 1,
+    "name": "Data ingestion",
+    "message": "Command exited with code 1.\nWARNING: Using incubator modules: jdk.incubator.vector\nUsing Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties\nSetting default log level to \"WARN\".\nTo adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).\n/usr/local/lib/python3.11/site-packages/pyspark/testing/utils.py:127: FutureWarning: PySpark does not yet fully support pandas >= 3.0.0. Some features may not work correctly. It is recommended to use pandas < 3.0.0 for now.\n  require_minimum_pandas_version()\n26/10/17 14:21:15 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable\nTraceback (most recent call last):\n  File \"/app/jobs/01_ingest.py\", line 20, in <module>\nCSV_PATH: '/app/data/pipeline_runs/20261017T142059309259Z/input.csv'\nFirst 16 bytes: b'PK\\x03\\x04\\x14\\x00\\x06\\x00\\x08\\x00\\x00\\x00!\\x00b\\xee'\n    raise ValueError(\nValueError: ERROR: /app/data/pipeline_runs/20261017T142059309259Z/input.csv contains ZIP/Excel-style binary data, not a normal CSV file.\n"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "run_id": "20261016T172511080193Z",
+  "status": "FAILED",
+  "started_at_utc": "2026-10-16T17:25:11.084832+00:00",
+  "finished_at_utc": "2026-10-16T17:36:16.487501+00:00",
+  "elapsed_seconds_this_invocation": 665.4,
+  "last_completed_stage": 1,
+  "next_stage": 2,
+  "stages": {
+    "1": {
+      "number": 1,
+      "name": "Data ingestion",
+      "status": "SUCCESS",
+      "attempts": 1,
+      "started_at_utc": "2026-10-16T17:25:13.401266+00:00",
+      "code_sha256": "1613eac213c93758f9e221822a3402395bc8d4663457729dfb294081cbc2e1ae",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\processed\\metropt"
+      ],
+      "error": null,
+      "finished_at_utc": "2026-10-16T17:31:12.672265+00:00",
+      "elapsed_seconds": 359.26
+    },
+    "2": {
+      "number": 2,
+      "name": "Parquet inspection",
+      "status": "FAILED",
+      "attempts": 1,
+      "started_at_utc": "2026-10-16T17:31:12.712271+00:00",
+      "code_sha256": "80cf2994f015478216c1c0bf7d9db3e1c0ef18ef863ae3ca6edc2b5819f886aa",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\processed\\metropt"
+      ],
+      "error": "Command exited with code 1.\nrequest returned 502 Bad Gateway for API route and version http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.55/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dvehicle-fault-prediction-sample-20261016t172511080193z%22%3Atrue%2C%22com.docker.compose.service%3Dpyspark%22%3Atrue%7D%7D, check if the server supports the requested API version\n",
+      "finished_at_utc": "2026-10-16T17:36:16.185646+00:00",
+      "elapsed_seconds": 303.46
+    }
+  },
+  "input": {
+    "path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261016T172511080193Z\\input.csv",
+    "sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a",
+    "csv_path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261016T172511080193Z\\input.csv",
+    "excel_sheet": null,
+    "csv_sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a"
+  },
+  "failure": "Command exited with code 1.\nrequest returned 502 Bad Gateway for API route and version http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.55/containers/json?filters=%7B%22label%22%3A%7B%22com.docker.compose.config-hash%22%3Atrue%2C%22com.docker.compose.project%3Dvehicle-fault-prediction-sample-20261016t172511080193z%22%3Atrue%2C%22com.docker.compose.service%3Dpyspark%22%3Atrue%7D%7D, check if the server supports the requested API version\n"
+}

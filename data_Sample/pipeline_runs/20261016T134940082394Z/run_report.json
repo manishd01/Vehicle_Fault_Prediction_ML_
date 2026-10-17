@@ -1,0 +1,39 @@
+{
+  "run_id": "20261016T134940082394Z",
+  "status": "FAILED",
+  "started_at_utc": "2026-10-16T13:49:40.082553+00:00",
+  "finished_at_utc": "2026-10-16T13:50:23.361961+00:00",
+  "elapsed_seconds": 43.274,
+  "input": {
+    "provided_path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data\\raw\\sample_small_meterpt3.csv",
+    "staged_path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261016T134940082394Z\\input.xlsx",
+    "csv_path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261016T134940082394Z\\input.csv",
+    "excel_sheet": null
+  },
+  "stages": [],
+  "split_distribution": null,
+  "failure": "Could not start pipeline services (exit code 1).\nrequest returned 500 Internal Server Error for API route and version http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/_ping, check if the server supports the requested API version\n",
+  "outputs_present": {
+    "processed/metropt": true,
+    "processed/metropt_timeseries": false,
+    "processed/metropt_labeled": false,
+    "processed/metropt_features": false,
+    "processed/train": false,
+    "processed/validation": false,
+    "processed/test": false,
+    "metrics/baseline_logistic_regression.json": false,
+    "metrics/random_forest.json": false,
+    "metrics/deep_learning.json": false,
+    "metrics/evaluation_14.json": false,
+    "metrics/random_forest_tuned.json": false,
+    "metrics/onnx_benchmark_18.json": false,
+    "models/baseline_logistic_regression.joblib": false,
+    "models/random_forest.joblib": false,
+    "models/random_forest_tuned.joblib": false,
+    "models/deep_learning.pt": false,
+    "models/onnx/random_forest.onnx": false,
+    "models/onnx/random_forest_metadata.json": false
+  },
+  "metrics": {},
+  "api_started": false
+}

@@ -39,15 +39,37 @@ df.select(
 ).show(truncate=False)
 
 
-# ============================================
-# 4. INDEX COLUMN CHECK
-# ============================================
+# ============================================================
+# INDEX COLUMN CHECK
+# ============================================================
 
 print("\n========== INDEX COLUMN CHECK ==========")
 
-df.select(min("_c0").alias("min_index"), max("_c0").alias("max_index")).show()
+# The CSV index was saved as "Unnamed: 0" in the Parquet dataset.
+# Older code expected "_c0", which does not exist here.
 
-print("Total rows:", df.count())
+if "Unnamed: 0" in df.columns:
+    index_col = "Unnamed: 0"
+
+    df.select(
+        min(index_col).alias("min_index"), max(index_col).alias("max_index")
+    ).show()
+
+    print(f"Index column found: {index_col}")
+
+elif "_c0" in df.columns:
+    # Keep compatibility with datasets that use the older column name.
+    index_col = "_c0"
+
+    df.select(
+        min(index_col).alias("min_index"), max(index_col).alias("max_index")
+    ).show()
+
+    print(f"Index column found: {index_col}")
+
+else:
+    print("WARNING: No recognised index column found.")
+    print(f"Available columns: {df.columns}")
 
 
 # ============================================

@@ -246,115 +246,231 @@ pipeline = Pipeline(
 
 print("\n========== TRAINING BASELINE MODEL ==========")
 
-pipeline.fit(
-    X_train,
-    y_train,
-)
+train_classes = y_train.nunique()
 
-print("Training completed.")
+if train_classes < 2:
+    print("TRAINING SKIPPED: The training dataset contains " "only one class.")
+    print("Target distribution:")
+    print(y_train.value_counts().sort_index())
+
+    metrics = {
+        "model": "logistic_regression",
+        "status": "skipped",
+        "reason": ("Training requires both normal (0) and fault (1) " "examples."),
+        "training_rows_original": int(len(train_df)),
+        "training_rows_used": int(len(train_sample)),
+        "validation_rows": int(len(validation_df)),
+        "feature_count": int(len(feature_columns)),
+        "features": feature_columns,
+        "training_class_distribution": {
+            str(int(label)): int(count)
+            for label, count in y_train.value_counts().items()
+        },
+    }
+
+    with open(METRICS_PATH, "w", encoding="utf-8") as file:
+        json.dump(metrics, file, indent=4)
+
+    print("Metrics saved to:", METRICS_PATH)
+    print("No model was trained or saved.")
+    print("\n========== STEP 11 SKIPPED ==========")
+
+else:
+    pipeline.fit(X_train, y_train)
+    print("Training completed.")
+
+    # ========================================================
+    # VALIDATION PREDICTIONS
+    # ========================================================
+
+    print("\n========== VALIDATION PREDICTION ==========")
+
+    y_pred = pipeline.predict(X_validation)
+    y_probability = pipeline.predict_proba(X_validation)[:, 1]
+
+    # ========================================================
+    # METRICS
+    # ========================================================
+
+    print("\n========== VALIDATION METRICS ==========")
+
+    precision = precision_score(y_validation, y_pred, zero_division=0)
+
+    recall = recall_score(y_validation, y_pred, zero_division=0)
+
+    f1 = f1_score(y_validation, y_pred, zero_division=0)
+
+    if y_validation.nunique() == 2:
+        roc_auc = roc_auc_score(y_validation, y_probability)
+        pr_auc = average_precision_score(y_validation, y_probability)
+    else:
+        roc_auc = None
+        pr_auc = None
+        print(
+            "WARNING: Validation contains only one class. "
+            "ROC-AUC and PR-AUC are not reported."
+        )
+
+    print(f"Precision : {precision:.4f}")
+    print(f"Recall    : {recall:.4f}")
+    print(f"F1 Score  : {f1:.4f}")
+    print(f"ROC-AUC   : {roc_auc if roc_auc is not None else 'N/A'}")
+    print(f"PR-AUC    : {pr_auc if pr_auc is not None else 'N/A'}")
+
+    # ========================================================
+    # SAVE MODEL
+    # ========================================================
+
+    print("\n========== SAVING MODEL ==========")
+
+    joblib.dump(pipeline, MODEL_PATH)
+    print("Model saved to:", MODEL_PATH)
+
+    # ========================================================
+    # SAVE METRICS
+    # ========================================================
+
+    metrics = {
+        "model": "logistic_regression",
+        "dataset": "MetroPT3 Air Compressor",
+        "status": "completed",
+        "training_rows_original": int(len(train_df)),
+        "training_rows_used": int(len(train_sample)),
+        "validation_rows": int(len(validation_df)),
+        "feature_count": int(len(feature_columns)),
+        "features": feature_columns,
+        "precision": float(precision),
+        "recall": float(recall),
+        "f1": float(f1),
+        "roc_auc": float(roc_auc) if roc_auc is not None else None,
+        "pr_auc": float(pr_auc) if pr_auc is not None else None,
+        "validation_class_distribution": {
+            str(int(label)): int(count)
+            for label, count in y_validation.value_counts().items()
+        },
+    }
+
+    with open(METRICS_PATH, "w", encoding="utf-8") as file:
+        json.dump(metrics, file, indent=4)
+
+    print("Metrics saved to:", METRICS_PATH)
+    print("\n========== STEP 11 COMPLETED ==========")
+
+# # ============================================================
+# # TRAIN
+# # ============================================================
+
+# print("\n========== TRAINING BASELINE MODEL ==========")
+
+# pipeline.fit(
+#     X_train,
+#     y_train,
+# )
+
+# print("Training completed.")
 
 
-# ============================================================
-# VALIDATION PREDICTIONS
-# ============================================================
+# # ============================================================
+# # VALIDATION PREDICTIONS
+# # ============================================================
 
-print("\n========== VALIDATION PREDICTION ==========")
+# print("\n========== VALIDATION PREDICTION ==========")
 
-y_pred = pipeline.predict(X_validation)
+# y_pred = pipeline.predict(X_validation)
 
-y_probability = pipeline.predict_proba(X_validation)[:, 1]
-
-
-# ============================================================
-# METRICS
-# ============================================================
-
-precision = precision_score(
-    y_validation,
-    y_pred,
-    zero_division=0,
-)
-
-recall = recall_score(
-    y_validation,
-    y_pred,
-    zero_division=0,
-)
-
-f1 = f1_score(
-    y_validation,
-    y_pred,
-    zero_division=0,
-)
-
-roc_auc = roc_auc_score(
-    y_validation,
-    y_probability,
-)
-
-pr_auc = average_precision_score(
-    y_validation,
-    y_probability,
-)
+# y_probability = pipeline.predict_proba(X_validation)[:, 1]
 
 
-print("\n========== VALIDATION METRICS ==========")
+# # ============================================================
+# # METRICS
+# # ============================================================
 
-print(f"Precision : {precision:.4f}")
-print(f"Recall    : {recall:.4f}")
-print(f"F1 Score  : {f1:.4f}")
-print(f"ROC-AUC   : {roc_auc:.4f}")
-print(f"PR-AUC    : {pr_auc:.4f}")
+# precision = precision_score(
+#     y_validation,
+#     y_pred,
+#     zero_division=0,
+# )
 
+# recall = recall_score(
+#     y_validation,
+#     y_pred,
+#     zero_division=0,
+# )
 
-# ============================================================
-# SAVE MODEL
-# ============================================================
+# f1 = f1_score(
+#     y_validation,
+#     y_pred,
+#     zero_division=0,
+# )
 
-print("\n========== SAVING MODEL ==========")
+# roc_auc = roc_auc_score(
+#     y_validation,
+#     y_probability,
+# )
 
-joblib.dump(
-    pipeline,
-    MODEL_PATH,
-)
-
-print("Model saved to:")
-print(MODEL_PATH)
-
-
-# ============================================================
-# SAVE METRICS
-# ============================================================
-
-metrics = {
-    "model": "logistic_regression",
-    "dataset": "MetroPT3 Air Compressor",
-    "training_rows_original": int(len(train_df)),
-    "training_rows_used": int(len(train_sample)),
-    "validation_rows": int(len(validation_df)),
-    "feature_count": int(len(feature_columns)),
-    "features": feature_columns,
-    "precision": float(precision),
-    "recall": float(recall),
-    "f1": float(f1),
-    "roc_auc": float(roc_auc),
-    "pr_auc": float(pr_auc),
-}
-
-with open(
-    METRICS_PATH,
-    "w",
-    encoding="utf-8",
-) as file:
-
-    json.dump(
-        metrics,
-        file,
-        indent=4,
-    )
+# pr_auc = average_precision_score(
+#     y_validation,
+#     y_probability,
+# )
 
 
-print("\nMetrics saved to:")
-print(METRICS_PATH)
+# print("\n========== VALIDATION METRICS ==========")
 
-print("\n========== STEP 11 COMPLETED ==========")
+# print(f"Precision : {precision:.4f}")
+# print(f"Recall    : {recall:.4f}")
+# print(f"F1 Score  : {f1:.4f}")
+# print(f"ROC-AUC   : {roc_auc:.4f}")
+# print(f"PR-AUC    : {pr_auc:.4f}")
+
+
+# # ============================================================
+# # SAVE MODEL
+# # ============================================================
+
+# print("\n========== SAVING MODEL ==========")
+
+# joblib.dump(
+#     pipeline,
+#     MODEL_PATH,
+# )
+
+# print("Model saved to:")
+# print(MODEL_PATH)
+
+
+# # ============================================================
+# # SAVE METRICS
+# # ============================================================
+
+# metrics = {
+#     "model": "logistic_regression",
+#     "dataset": "MetroPT3 Air Compressor",
+#     "training_rows_original": int(len(train_df)),
+#     "training_rows_used": int(len(train_sample)),
+#     "validation_rows": int(len(validation_df)),
+#     "feature_count": int(len(feature_columns)),
+#     "features": feature_columns,
+#     "precision": float(precision),
+#     "recall": float(recall),
+#     "f1": float(f1),
+#     "roc_auc": float(roc_auc),
+#     "pr_auc": float(pr_auc),
+# }
+
+# with open(
+#     METRICS_PATH,
+#     "w",
+#     encoding="utf-8",
+# ) as file:
+
+#     json.dump(
+#         metrics,
+#         file,
+#         indent=4,
+#     )
+
+
+# print("\nMetrics saved to:")
+# print(METRICS_PATH)
+
+# print("\n========== STEP 11 COMPLETED ==========")

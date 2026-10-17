@@ -266,8 +266,48 @@ def main():
     print("\nValidation target distribution:")
     print(validation_df[TARGET_COLUMN].value_counts(dropna=False))
 
-    # 2. Create a manageable training sample.
+    # # 2. Create a manageable training sample.
+    # print("\n========== PREPARING TRAINING SAMPLE ==========")
+
+    # train_df = create_training_sample(
+    #     train_df,
+    #     MAX_TRAIN_ROWS,
+    # )
+    # ;;;better way:\
+    # 2. Check class distribution before creating a training sample.
     print("\n========== PREPARING TRAINING SAMPLE ==========")
+
+    train_df = train_df.dropna(subset=[TARGET_COLUMN]).copy()
+    train_df[TARGET_COLUMN] = pd.to_numeric(
+        train_df[TARGET_COLUMN],
+        errors="coerce",
+    )
+    train_df = train_df.dropna(subset=[TARGET_COLUMN])
+    train_df[TARGET_COLUMN] = train_df[TARGET_COLUMN].astype(int)
+
+    normal_count = int((train_df[TARGET_COLUMN] == 0).sum())
+    fault_count = int((train_df[TARGET_COLUMN] == 1).sum())
+
+    if normal_count == 0 or fault_count == 0:
+        metrics = {
+            "model": "pytorch_feedforward_neural_network",
+            "status": "skipped",
+            "reason": "Training data must contain both normal and fault examples.",
+            "training_rows": int(len(train_df)),
+            "normal_rows": normal_count,
+            "fault_rows": fault_count,
+        }
+
+        with open(METRICS_PATH, "w", encoding="utf-8") as file:
+            json.dump(metrics, file, indent=4)
+
+        print("TRAINING SKIPPED: Training data does not contain both classes.")
+        print(f"Normal rows: {normal_count}")
+        print(f"Fault rows: {fault_count}")
+        print("Metrics saved:", METRICS_PATH)
+        print("No neural network model was trained or saved.")
+        print("\n========== STEP 13 SKIPPED ==========")
+        return
 
     train_df = create_training_sample(
         train_df,
