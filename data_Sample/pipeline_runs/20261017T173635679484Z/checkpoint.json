@@ -1,8 +1,8 @@
 {
   "run_id": "20261017T173635679484Z",
-  "status": "SUCCESS",
+  "status": "RUNNING",
   "started_at_utc": "2026-10-17T17:36:35.686791+00:00",
-  "updated_at_utc": "2026-10-18T19:11:21.222945+00:00",
+  "updated_at_utc": "2026-10-18T19:28:44.892064+00:00",
   "input": {
     "path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261017T173635679484Z\\input.csv",
     "sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a",
@@ -11,7 +11,7 @@
     "csv_sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a"
   },
   "last_completed_stage": 19,
-  "next_stage": null,
+  "next_stage": 13,
   "stages": {
     "1": {
       "number": 1,
@@ -155,45 +155,41 @@
     },
     "11": {
       "number": 11,
-      "name": "Fault-label distribution gate",
-      "status": "SUCCESS",
-      "attempts": 5,
-      "started_at_utc": "2026-10-17T19:17:16.387363+00:00",
-      "code_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "outputs": [],
-      "error": null,
-      "finished_at_utc": "2026-10-17T19:18:09.449024+00:00",
-      "elapsed_seconds": 53.06
-    },
-    "12": {
-      "number": 12,
       "name": "Baseline model",
       "status": "SUCCESS",
-      "attempts": 5,
-      "started_at_utc": "2026-10-18T14:45:17.697529+00:00",
+      "attempts": 6,
+      "started_at_utc": "2026-10-18T19:28:25.075396+00:00",
       "code_sha256": "d56709d5653de7cb4b82321b2a730875c07f7d419d670280bcbc108cc014962b",
       "outputs": [
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\baseline_logistic_regression.json",
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\baseline_logistic_regression.joblib"
       ],
       "error": null,
-      "finished_at_utc": "2026-10-18T14:45:25.638596+00:00",
-      "elapsed_seconds": 7.93
+      "finished_at_utc": "2026-10-18T19:28:35.584473+00:00",
+      "elapsed_seconds": 10.5
     },
-    "13": {
-      "number": 13,
+    "12": {
+      "number": 12,
       "name": "Random Forest model",
       "status": "SUCCESS",
-      "attempts": 2,
-      "started_at_utc": "2026-10-18T14:52:22.310972+00:00",
+      "attempts": 6,
+      "started_at_utc": "2026-10-18T19:28:35.615989+00:00",
       "code_sha256": "152f2b6486b9be9ba9e728ce2d7bd215fb3c142717cd5644f48906e38e82abe1",
       "outputs": [
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\random_forest.json",
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\random_forest.joblib"
       ],
       "error": null,
-      "finished_at_utc": "2026-10-18T14:52:38.139774+00:00",
-      "elapsed_seconds": 15.82
+      "finished_at_utc": "2026-10-18T19:28:44.855381+00:00",
+      "elapsed_seconds": 9.23
+    },
+    "13": {
+      "number": 13,
+      "name": "Deep-learning model",
+      "status": "RUNNING",
+      "attempts": 3,
+      "started_at_utc": "2026-10-18T19:28:44.892015+00:00",
+      "code_sha256": "6872c05f8009a33c0d37db1a31ebd2a2b612eca0ed16465ec7ab891ad06c9ceb"
     },
     "14": {
       "number": 14,
