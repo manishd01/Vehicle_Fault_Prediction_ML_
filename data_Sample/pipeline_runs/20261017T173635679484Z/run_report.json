@@ -2,10 +2,10 @@
   "run_id": "20261017T173635679484Z",
   "status": "FAILED",
   "started_at_utc": "2026-10-17T17:36:35.686791+00:00",
-  "finished_at_utc": "2026-10-17T19:36:41.517131+00:00",
-  "elapsed_seconds_this_invocation": 10.76,
-  "last_completed_stage": 11,
-  "next_stage": 12,
+  "finished_at_utc": "2026-10-18T15:08:37.810405+00:00",
+  "elapsed_seconds_this_invocation": 49.18,
+  "last_completed_stage": 14,
+  "next_stage": 15,
   "stages": {
     "1": {
       "number": 1,
@@ -162,17 +162,61 @@
     "12": {
       "number": 12,
       "name": "Baseline model",
-      "status": "FAILED",
-      "attempts": 2,
-      "started_at_utc": "2026-10-17T19:36:32.897212+00:00",
-      "code_sha256": "3a45a1b29eb15d2f7ab4f9ea321374aa997378786d82cefc4a392770364e3bf1",
+      "status": "SUCCESS",
+      "attempts": 5,
+      "started_at_utc": "2026-10-18T14:45:17.697529+00:00",
+      "code_sha256": "d56709d5653de7cb4b82321b2a730875c07f7d419d670280bcbc108cc014962b",
       "outputs": [
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\baseline_logistic_regression.json",
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\baseline_logistic_regression.joblib"
       ],
-      "error": "Stage exited successfully but expected output(s) are missing: ['metrics/baseline_logistic_regression.json', 'models/baseline_logistic_regression.joblib']",
-      "finished_at_utc": "2026-10-17T19:36:41.506167+00:00",
-      "elapsed_seconds": 8.6
+      "error": null,
+      "finished_at_utc": "2026-10-18T14:45:25.638596+00:00",
+      "elapsed_seconds": 7.93
+    },
+    "13": {
+      "number": 13,
+      "name": "Random Forest model",
+      "status": "SUCCESS",
+      "attempts": 2,
+      "started_at_utc": "2026-10-18T14:52:22.310972+00:00",
+      "code_sha256": "152f2b6486b9be9ba9e728ce2d7bd215fb3c142717cd5644f48906e38e82abe1",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\random_forest.json",
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\random_forest.joblib"
+      ],
+      "error": null,
+      "finished_at_utc": "2026-10-18T14:52:38.139774+00:00",
+      "elapsed_seconds": 15.82
+    },
+    "14": {
+      "number": 14,
+      "name": "Deep-learning model",
+      "status": "SUCCESS",
+      "attempts": 3,
+      "started_at_utc": "2026-10-18T15:07:51.091065+00:00",
+      "code_sha256": "6872c05f8009a33c0d37db1a31ebd2a2b612eca0ed16465ec7ab891ad06c9ceb",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\deep_learning.json",
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\deep_learning.pt"
+      ],
+      "error": null,
+      "finished_at_utc": "2026-10-18T15:08:27.852481+00:00",
+      "elapsed_seconds": 36.75
+    },
+    "15": {
+      "number": 15,
+      "name": "Model evaluation",
+      "status": "FAILED",
+      "attempts": 1,
+      "started_at_utc": "2026-10-18T15:08:27.907561+00:00",
+      "code_sha256": "9e46d47b92e9c3cd70e2853ad89dd04fafcbcbba1c6e87983a2e954cdc7fcd79",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\evaluation_14.json"
+      ],
+      "error": "Command exited with code 1.\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/app/src/evaluation/evaluate_14.py\", line 163, in <module>\n    main()\n  File \"/app/src/evaluation/evaluate_14.py\", line 92, in main\n    probabilities = model.predict_proba(X_df)[:, 1]\n                    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\nIndexError: index 1 is out of bounds for axis 1 with size 1\n\n========== STEP 14: MODEL EVALUATION ==========\nValidation dataset: /app/data/processed/validation\n\nEvaluating Random Forest...\n",
+      "finished_at_utc": "2026-10-18T15:08:37.805277+00:00",
+      "elapsed_seconds": 9.89
     }
   },
   "input": {
@@ -182,5 +226,5 @@
     "excel_sheet": null,
     "csv_sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a"
   },
-  "failure": "Stage exited successfully but expected output(s) are missing: ['metrics/baseline_logistic_regression.json', 'models/baseline_logistic_regression.joblib']"
+  "failure": "Command exited with code 1.\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/app/src/evaluation/evaluate_14.py\", line 163, in <module>\n    main()\n  File \"/app/src/evaluation/evaluate_14.py\", line 92, in main\n    probabilities = model.predict_proba(X_df)[:, 1]\n                    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\nIndexError: index 1 is out of bounds for axis 1 with size 1\n\n========== STEP 14: MODEL EVALUATION ==========\nValidation dataset: /app/data/processed/validation\n\nEvaluating Random Forest...\n"
 }

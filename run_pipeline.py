@@ -632,7 +632,7 @@ finally:
             ],
             "environment_kind": "pyspark",
             "code_paths": [],
-            "outputs": [],
+            "outputs": [f"pipeline_runs/{run_dir.name}/split_distribution.json"],
         }
     )
 
@@ -680,6 +680,39 @@ def outputs_exist(stage: dict[str, Any]) -> bool:
             return False
 
     return True
+
+
+def validate_metric_outputs(stage: dict[str, Any]) -> str | None:
+    """Reject skipped, failed, or invalid metrics reports."""
+
+    for relative_path in stage["outputs"]:
+        path = DATA_DIR / relative_path
+
+        # Validate JSON reports stored in the metrics directory.
+        if "metrics" not in Path(relative_path).parts:
+            continue
+
+        if path.suffix.lower() != ".json" or not path.is_file():
+            continue
+
+        try:
+            payload = load_json(path)
+        except (OSError, json.JSONDecodeError) as error:
+            return f"Invalid metrics JSON at {path}: {error}"
+
+        status = payload.get("status")
+
+        if isinstance(status, str) and status.lower() in {
+            "skipped",
+            "failed",
+            "error",
+        }:
+            return (
+                f"Stage '{stage['name']}' produced a metrics report "
+                f"with status='{status}': {path}"
+            )
+
+    return None
 
 
 def can_reuse_stage(
@@ -846,6 +879,8 @@ def main() -> int:
     print(f"Run folder: {run_dir}")
     print(f"Checkpoint: {checkpoint_path}")
 
+    # NEW: Preserve the API when startup succeeds.
+    keep_api_running = False
     try:
         # Start the containers under this run's unique Compose project.
         code, output = run_command(
@@ -918,14 +953,11 @@ def main() -> int:
         }
 
         # Find the earliest stage that is not safely reusable.
+        # Find the earliest stage that is not safely reusable.
         earliest_invalid = TOTAL_STAGES + 1
 
         for stage in stages:
             if args.resume and can_reuse_stage(checkpoint, stage):
-                print(
-                    f"[{stage['number']}/{TOTAL_STAGES}] "
-                    f"{stage['name']} ... SKIPPED (cached SUCCESS)"
-                )
                 continue
 
             earliest_invalid = stage["number"]
@@ -942,6 +974,16 @@ def main() -> int:
         else:
             start_stage = earliest_invalid
 
+        # NEW: Report only stages that will actually be skipped.
+        if args.resume:
+            for stage in stages:
+                if stage["number"] >= start_stage:
+                    break
+
+                print(
+                    f"[{stage['number']}/{TOTAL_STAGES}] "
+                    f"{stage['name']} ... SKIPPED"
+                )
         if start_stage > TOTAL_STAGES:
             print("\nAll stages are already complete and reusable.")
         else:
@@ -1008,11 +1050,16 @@ def main() -> int:
                     error = "Fault-label distribution report is empty."
 
             # Validate mapped outputs after a successful command.
+            # Validate mapped outputs after a successful command.
             if error is None and not outputs_exist(stage):
                 error = (
                     "Stage exited successfully but expected output(s) "
                     f"are missing: {stage['outputs']}"
                 )
+
+            # NEW: A present metrics file is not enough.
+            if error is None:
+                error = validate_metric_outputs(stage)
 
             success = error is None
 
@@ -1089,6 +1136,8 @@ def main() -> int:
                     "Could not start API service.",
                 )
                 return 1
+            # NEW: The API is running; preserve its container and network.
+            keep_api_running = True
 
         save_report(
             report_path,
@@ -1136,7 +1185,32 @@ def main() -> int:
 
         return 1
     finally:
-        cleanup_compose_project(compose_args)
+        if keep_api_running:
+            print(
+                "\nKeeping the API running. "
+                "Stopping the pipeline's other services...",
+                flush=True,
+            )
+
+            code, output = run_command(
+                [
+                    *compose_args,
+                    "stop",
+                    "pyspark",
+                    "ml-training",
+                    "mlflow",
+                ]
+            )
+
+            if code != 0:
+                print(
+                    "WARNING: Could not stop all auxiliary services:\n"
+                    f"{output[-3000:]}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+        else:
+            cleanup_compose_project(compose_args)
 
 
 if __name__ == "__main__":

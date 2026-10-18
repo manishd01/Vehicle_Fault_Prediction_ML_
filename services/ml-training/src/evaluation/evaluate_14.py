@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-
+import numpy as np
 import joblib
 import numpy as np
 import torch
@@ -89,7 +89,22 @@ def main():
         X_df, _ = prepare_features(validation_df, list(features))
 
         if hasattr(model, "predict_proba"):
-            probabilities = model.predict_proba(X_df)[:, 1]
+            # probabilities = model.predict_proba(X_df)[:, 1]
+            # NEW: Handle models trained with only one class.
+            model_classes = (
+                model.named_steps["model"].classes_
+                if hasattr(model, "named_steps")
+                else model.classes_
+            )
+
+            probability_columns = model.predict_proba(X_df)
+
+            if 1 in model_classes:
+                fault_column = list(model_classes).index(1)
+                probabilities = probability_columns[:, fault_column]
+            else:
+                # The model has no fault class, so it cannot predict fault probability.
+                probabilities = np.zeros(len(X_df), dtype=float)
         else:
             raise TypeError("Random Forest model has no predict_proba method.")
 

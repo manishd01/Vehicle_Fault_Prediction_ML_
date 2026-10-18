@@ -1,8 +1,8 @@
 {
   "run_id": "20261017T173635679484Z",
-  "status": "FAILED",
+  "status": "RUNNING",
   "started_at_utc": "2026-10-17T17:36:35.686791+00:00",
-  "updated_at_utc": "2026-10-17T19:36:41.510975+00:00",
+  "updated_at_utc": "2026-10-18T17:53:10.588822+00:00",
   "input": {
     "path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261017T173635679484Z\\input.csv",
     "sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a",
@@ -10,8 +10,8 @@
     "excel_sheet": null,
     "csv_sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a"
   },
-  "last_completed_stage": 11,
-  "next_stage": 12,
+  "last_completed_stage": 14,
+  "next_stage": 15,
   "stages": {
     "1": {
       "number": 1,
@@ -168,22 +168,56 @@
     "12": {
       "number": 12,
       "name": "Baseline model",
-      "status": "FAILED",
-      "attempts": 2,
-      "started_at_utc": "2026-10-17T19:36:32.897212+00:00",
-      "code_sha256": "3a45a1b29eb15d2f7ab4f9ea321374aa997378786d82cefc4a392770364e3bf1",
+      "status": "SUCCESS",
+      "attempts": 5,
+      "started_at_utc": "2026-10-18T14:45:17.697529+00:00",
+      "code_sha256": "d56709d5653de7cb4b82321b2a730875c07f7d419d670280bcbc108cc014962b",
       "outputs": [
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\baseline_logistic_regression.json",
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\baseline_logistic_regression.joblib"
       ],
-      "error": "Stage exited successfully but expected output(s) are missing: ['metrics/baseline_logistic_regression.json', 'models/baseline_logistic_regression.joblib']",
-      "finished_at_utc": "2026-10-17T19:36:41.506167+00:00",
-      "elapsed_seconds": 8.6
+      "error": null,
+      "finished_at_utc": "2026-10-18T14:45:25.638596+00:00",
+      "elapsed_seconds": 7.93
+    },
+    "13": {
+      "number": 13,
+      "name": "Random Forest model",
+      "status": "SUCCESS",
+      "attempts": 2,
+      "started_at_utc": "2026-10-18T14:52:22.310972+00:00",
+      "code_sha256": "152f2b6486b9be9ba9e728ce2d7bd215fb3c142717cd5644f48906e38e82abe1",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\random_forest.json",
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\random_forest.joblib"
+      ],
+      "error": null,
+      "finished_at_utc": "2026-10-18T14:52:38.139774+00:00",
+      "elapsed_seconds": 15.82
+    },
+    "14": {
+      "number": 14,
+      "name": "Deep-learning model",
+      "status": "SUCCESS",
+      "attempts": 3,
+      "started_at_utc": "2026-10-18T15:07:51.091065+00:00",
+      "code_sha256": "6872c05f8009a33c0d37db1a31ebd2a2b612eca0ed16465ec7ab891ad06c9ceb",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\deep_learning.json",
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\deep_learning.pt"
+      ],
+      "error": null,
+      "finished_at_utc": "2026-10-18T15:08:27.852481+00:00",
+      "elapsed_seconds": 36.75
+    },
+    "15": {
+      "number": 15,
+      "name": "Model evaluation",
+      "status": "RUNNING",
+      "attempts": 2,
+      "started_at_utc": "2026-10-18T17:53:10.588804+00:00",
+      "code_sha256": "a98efb54eadd00b40b43497a7f797bd06ad9ab9e7c8e9a3e52e01f05aeb55010"
     }
   },
-  "failure": {
-    "stage": 12,
-    "name": "Baseline model",
-    "message": "Stage exited successfully but expected output(s) are missing: ['metrics/baseline_logistic_regression.json', 'models/baseline_logistic_regression.joblib']"
-  }
+  "failure": null
 }

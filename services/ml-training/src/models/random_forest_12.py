@@ -1,11 +1,13 @@
 import json
 import os
 from pathlib import Path
-
 import joblib
+import numpy as np
 import pandas as pd
 
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.dummy import DummyClassifier
+
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import (
     average_precision_score,
@@ -72,34 +74,32 @@ print(validation_df["fault_label"].value_counts().sort_index())
 # HANDLE MISSING CLASSES SAFELY
 # ============================================================
 
-train_classes = sorted(train_df["fault_label"].unique().tolist())
 
-if len(train_classes) < 2 or not {0, 1}.issubset(set(train_classes)):
-    normal_count = int((train_df["fault_label"] == 0).sum())
-    fault_count = int((train_df["fault_label"] == 1).sum())
+# ============================================================
+# HANDLE EMPTY DATA AND MISSING CLASSES
+# ============================================================
 
-    metrics = {
-        "model": "random_forest",
-        "status": "skipped",
-        "reason": "Training data must contain both normal and fault examples.",
-        "training_rows": int(len(train_df)),
-        "normal_rows": normal_count,
-        "fault_rows": fault_count,
-    }
-
-    with open(METRICS_PATH, "w", encoding="utf-8") as file:
-        json.dump(metrics, file, indent=4)
-
-    print("TRAINING SKIPPED: Training data does not contain both classes.")
-    print(f"Normal rows: {normal_count}")
-    print(f"Fault rows: {fault_count}")
-    print("Metrics saved:", METRICS_PATH)
-    print("No Random Forest model was trained or saved.")
-    raise SystemExit(0)
+if train_df.empty:
+    raise ValueError("Training dataset has no rows with valid fault_label values.")
 
 if validation_df.empty:
-    raise ValueError("Validation dataset is empty.")
+    raise ValueError("Validation dataset has no rows with valid fault_label values.")
 
+train_classes = sorted(train_df["fault_label"].unique().tolist())
+
+if not set(train_classes).issubset({0, 1}):
+    raise ValueError(
+        f"Unexpected training labels: {train_classes}. "
+        "Expected only 0 (normal) and 1 (fault)."
+    )
+
+print("Training classes:", train_classes)
+
+if len(train_classes) == 1:
+    print(
+        f"WARNING: Training contains only class {train_classes[0]}. "
+        "A constant-prediction fallback will be used."
+    )
 
 # ============================================================
 # 3. SELECT FEATURES
@@ -190,23 +190,35 @@ y_validation = validation_df["fault_label"]
 # 6. BUILD RANDOM FOREST PIPELINE
 # ============================================================
 
+
+# ============================================================
+# 6. BUILD MODEL PIPELINE
+# ============================================================
+
+if len(y_train.unique()) == 1:
+    only_class = int(y_train.iloc[0])
+
+    model = DummyClassifier(
+        strategy="constant",
+        constant=only_class,
+    )
+
+    print(f"Using DummyClassifier: every prediction will be {only_class}.")
+
+else:
+    model = RandomForestClassifier(
+        n_estimators=100,
+        max_depth=20,
+        min_samples_leaf=2,
+        class_weight="balanced_subsample",
+        random_state=42,
+        n_jobs=-1,
+    )
+
 pipeline = Pipeline(
     steps=[
-        (
-            "imputer",
-            SimpleImputer(strategy="median"),
-        ),
-        (
-            "model",
-            RandomForestClassifier(
-                n_estimators=100,
-                max_depth=20,
-                min_samples_leaf=2,
-                class_weight="balanced_subsample",
-                random_state=42,
-                n_jobs=-1,
-            ),
-        ),
+        ("imputer", SimpleImputer(strategy="median")),
+        ("model", model),
     ]
 )
 
@@ -230,7 +242,18 @@ print("\n========== VALIDATING MODEL ==========")
 
 y_pred = pipeline.predict(X_validation)
 
-y_probability = pipeline.predict_proba(X_validation)[:, 1]
+# y_probability = pipeline.predict_proba(X_validation)[:, 1]
+
+# NEW: Safely get the probability for fault class 1.
+model_classes = pipeline.named_steps["model"].classes_
+
+if 1 in model_classes:
+    fault_index = list(model_classes).index(1)
+    y_probability = pipeline.predict_proba(X_validation)[:, fault_index]
+else:
+    # Training contained only normal records.
+    y_probability = np.zeros(len(X_validation), dtype=float)
+
 
 from collections import Counter
 
@@ -304,8 +327,20 @@ else:
     roc_auc = None
     pr_auc = None
 
+
 metrics = {
     "model": "random_forest",
+    "status": ("completed_with_warning" if len(train_classes) == 1 else "completed"),
+    "single_class_fallback": len(train_classes) == 1,
+    "training_classes": [int(c) for c in train_classes],
+    "training_class_distribution": {
+        str(int(label)): int(count) for label, count in y_train.value_counts().items()
+    },
+    "validation_class_distribution": {
+        str(int(label)): int(count)
+        for label, count in y_validation.value_counts().items()
+    },
+    "training_rows_original": int(len(positive_df) + len(negative_df)),
     "training_rows_used": int(len(X_train)),
     "validation_rows": int(len(X_validation)),
     "feature_count": len(feature_columns),
@@ -313,8 +348,8 @@ metrics = {
     "precision": float(precision),
     "recall": float(recall),
     "f1": float(f1),
-    "roc_auc": (float(roc_auc) if roc_auc is not None else None),
-    "pr_auc": (float(pr_auc) if pr_auc is not None else None),
+    "roc_auc": float(roc_auc) if roc_auc is not None else None,
+    "pr_auc": float(pr_auc) if pr_auc is not None else None,
 }
 
 print("\n========== VALIDATION METRICS ==========")

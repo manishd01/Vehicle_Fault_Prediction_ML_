@@ -1,7 +1,11 @@
 {
     "model": "logistic_regression",
-    "status": "skipped",
-    "reason": "Training requires both normal (0) and fault (1) examples.",
+    "dataset": "MetroPT3 Air Compressor",
+    "status": "completed_with_warning",
+    "single_class_fallback": true,
+    "training_classes": [
+        0
+    ],
     "training_rows_original": 157,
     "training_rows_used": 157,
     "validation_rows": 34,
@@ -70,7 +74,15 @@
         "hour_sin",
         "hour_cos"
     ],
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "roc_auc": null,
+    "pr_auc": null,
     "training_class_distribution": {
         "0": 157
+    },
+    "validation_class_distribution": {
+        "0": 34
     }
 }

@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+from sklearn.dummy import DummyClassifier
 
 import joblib
 import pandas as pd
@@ -123,36 +124,50 @@ negative_df = train_df[train_df["fault_label"] == 0]
 print("Positive rows:", len(positive_df))
 print("Negative rows:", len(negative_df))
 
+
 if len(train_df) > MAX_TRAIN_ROWS:
 
-    # Keep all positive examples if possible.
-    max_positive = min(
-        len(positive_df),
-        MAX_TRAIN_ROWS // 3,
-    )
+    # NEW: Sample only classes that actually exist.
+    positive_count = len(positive_df)
+    negative_count = len(negative_df)
 
-    positive_sample = positive_df.sample(
-        n=max_positive,
-        random_state=42,
-    )
+    if positive_count == 0 or negative_count == 0:
+        # Single-class data: sample available records safely.
+        train_sample = train_df.sample(
+            n=MAX_TRAIN_ROWS,
+            random_state=42,
+        )
 
-    remaining_rows = MAX_TRAIN_ROWS - len(positive_sample)
+    else:
+        # Both classes exist: preserve a balanced sample.
+        max_positive = min(
+            positive_count,
+            MAX_TRAIN_ROWS // 3,
+        )
 
-    negative_sample = negative_df.sample(
-        n=remaining_rows,
-        random_state=42,
-    )
+        remaining_rows = MAX_TRAIN_ROWS - max_positive
 
-    train_sample = pd.concat(
-        [
-            positive_sample,
-            negative_sample,
-        ],
-        ignore_index=True,
-    )
+        negative_count_to_sample = min(
+            negative_count,
+            remaining_rows,
+        )
+
+        positive_sample = positive_df.sample(
+            n=max_positive,
+            random_state=42,
+        )
+
+        negative_sample = negative_df.sample(
+            n=negative_count_to_sample,
+            random_state=42,
+        )
+
+        train_sample = pd.concat(
+            [positive_sample, negative_sample],
+            ignore_index=True,
+        )
 
 else:
-
     train_sample = train_df.copy()
 
 
@@ -219,11 +234,35 @@ preprocessor = ColumnTransformer(
 # BASELINE MODEL
 # ============================================================
 
-model = LogisticRegression(
-    max_iter=1000,
-    class_weight="balanced",
-    random_state=42,
-)
+# NEW: Use Logistic Regression when both classes exist.
+# Use DummyClassifier when the training data has only one class.
+train_classes = sorted(y_train.dropna().unique().tolist())
+
+if len(train_classes) == 0:
+    raise ValueError("Training data contains no valid fault_label values.")
+
+if not set(train_classes).issubset({0, 1}):
+    raise ValueError(f"Unexpected fault_label values: {train_classes}")
+
+if len(train_classes) == 1:
+    only_class = int(train_classes[0])
+
+    print(
+        f"WARNING: Training contains only class {only_class}. "
+        "Using a constant-prediction fallback model."
+    )
+
+    model = DummyClassifier(
+        strategy="constant",
+        constant=only_class,
+    )
+
+else:
+    model = LogisticRegression(
+        max_iter=1000,
+        class_weight="balanced",
+        random_state=42,
+    )
 
 
 pipeline = Pipeline(
@@ -246,115 +285,123 @@ pipeline = Pipeline(
 
 print("\n========== TRAINING BASELINE MODEL ==========")
 
-train_classes = y_train.nunique()
+if len(X_train) == 0:
+    raise ValueError("Training dataset is empty.")
 
-if train_classes < 2:
-    print("TRAINING SKIPPED: The training dataset contains " "only one class.")
-    print("Target distribution:")
-    print(y_train.value_counts().sort_index())
+if len(X_validation) == 0:
+    raise ValueError("Validation dataset is empty.")
 
-    metrics = {
-        "model": "logistic_regression",
-        "status": "skipped",
-        "reason": ("Training requires both normal (0) and fault (1) " "examples."),
-        "training_rows_original": int(len(train_df)),
-        "training_rows_used": int(len(train_sample)),
-        "validation_rows": int(len(validation_df)),
-        "feature_count": int(len(feature_columns)),
-        "features": feature_columns,
-        "training_class_distribution": {
-            str(int(label)): int(count)
-            for label, count in y_train.value_counts().items()
-        },
-    }
+# Train either the normal model or the single-class fallback.
+pipeline.fit(X_train, y_train)
+print("Training completed.")
 
-    with open(METRICS_PATH, "w", encoding="utf-8") as file:
-        json.dump(metrics, file, indent=4)
+# ========================================================
+# VALIDATION PREDICTIONS
+# ========================================================
 
-    print("Metrics saved to:", METRICS_PATH)
-    print("No model was trained or saved.")
-    print("\n========== STEP 11 SKIPPED ==========")
+print("\n========== VALIDATION PREDICTION ==========")
 
+y_pred = pipeline.predict(X_validation)
+
+# DummyClassifier may have only one probability column.
+# Always select the probability column for class 1 if it exists.
+model_classes = pipeline.named_steps["model"].classes_
+
+if 1 in model_classes:
+    positive_index = list(model_classes).index(1)
+    y_probability = pipeline.predict_proba(X_validation)[:, positive_index]
 else:
-    pipeline.fit(X_train, y_train)
-    print("Training completed.")
+    # No fault examples were available during training.
+    y_probability = [0.0] * len(X_validation)
 
-    # ========================================================
-    # VALIDATION PREDICTIONS
-    # ========================================================
+# ========================================================
+# METRICS
+# ========================================================
 
-    print("\n========== VALIDATION PREDICTION ==========")
+print("\n========== VALIDATION METRICS ==========")
 
-    y_pred = pipeline.predict(X_validation)
-    y_probability = pipeline.predict_proba(X_validation)[:, 1]
+precision = precision_score(
+    y_validation,
+    y_pred,
+    pos_label=1,
+    zero_division=0,
+)
 
-    # ========================================================
-    # METRICS
-    # ========================================================
+recall = recall_score(
+    y_validation,
+    y_pred,
+    pos_label=1,
+    zero_division=0,
+)
 
-    print("\n========== VALIDATION METRICS ==========")
+f1 = f1_score(
+    y_validation,
+    y_pred,
+    pos_label=1,
+    zero_division=0,
+)
 
-    precision = precision_score(y_validation, y_pred, zero_division=0)
+if y_validation.nunique() == 2:
+    roc_auc = roc_auc_score(y_validation, y_probability)
+    pr_auc = average_precision_score(y_validation, y_probability)
+else:
+    roc_auc = None
+    pr_auc = None
+    print(
+        "WARNING: Validation contains only one class. "
+        "ROC-AUC and PR-AUC are not reported."
+    )
 
-    recall = recall_score(y_validation, y_pred, zero_division=0)
+print(f"Precision : {precision:.4f}")
+print(f"Recall    : {recall:.4f}")
+print(f"F1 Score  : {f1:.4f}")
+print(f"ROC-AUC   : {roc_auc if roc_auc is not None else 'N/A'}")
+print(f"PR-AUC    : {pr_auc if pr_auc is not None else 'N/A'}")
 
-    f1 = f1_score(y_validation, y_pred, zero_division=0)
+# ========================================================
+# SAVE MODEL
+# ========================================================
 
-    if y_validation.nunique() == 2:
-        roc_auc = roc_auc_score(y_validation, y_probability)
-        pr_auc = average_precision_score(y_validation, y_probability)
-    else:
-        roc_auc = None
-        pr_auc = None
-        print(
-            "WARNING: Validation contains only one class. "
-            "ROC-AUC and PR-AUC are not reported."
-        )
+print("\n========== SAVING MODEL ==========")
 
-    print(f"Precision : {precision:.4f}")
-    print(f"Recall    : {recall:.4f}")
-    print(f"F1 Score  : {f1:.4f}")
-    print(f"ROC-AUC   : {roc_auc if roc_auc is not None else 'N/A'}")
-    print(f"PR-AUC    : {pr_auc if pr_auc is not None else 'N/A'}")
+joblib.dump(pipeline, MODEL_PATH)
+print("Model saved to:", MODEL_PATH)
 
-    # ========================================================
-    # SAVE MODEL
-    # ========================================================
+# ========================================================
+# SAVE METRICS
+# ========================================================
 
-    print("\n========== SAVING MODEL ==========")
+metrics = {
+    "model": "logistic_regression",
+    "dataset": "MetroPT3 Air Compressor",
+    "status": ("completed_with_warning" if len(train_classes) == 1 else "completed"),
+    "single_class_fallback": len(train_classes) == 1,
+    "training_classes": train_classes,
+    "training_rows_original": int(len(train_df)),
+    "training_rows_used": int(len(train_sample)),
+    "validation_rows": int(len(validation_df)),
+    "feature_count": int(len(feature_columns)),
+    "features": feature_columns,
+    "precision": float(precision),
+    "recall": float(recall),
+    "f1": float(f1),
+    "roc_auc": float(roc_auc) if roc_auc is not None else None,
+    "pr_auc": float(pr_auc) if pr_auc is not None else None,
+    "training_class_distribution": {
+        str(int(label)): int(count) for label, count in y_train.value_counts().items()
+    },
+    "validation_class_distribution": {
+        str(int(label)): int(count)
+        for label, count in y_validation.value_counts().items()
+    },
+}
 
-    joblib.dump(pipeline, MODEL_PATH)
-    print("Model saved to:", MODEL_PATH)
+with open(METRICS_PATH, "w", encoding="utf-8") as file:
+    json.dump(metrics, file, indent=4)
 
-    # ========================================================
-    # SAVE METRICS
-    # ========================================================
+print("Metrics saved to:", METRICS_PATH)
+print("\n========== STEP 11 COMPLETED ==========")
 
-    metrics = {
-        "model": "logistic_regression",
-        "dataset": "MetroPT3 Air Compressor",
-        "status": "completed",
-        "training_rows_original": int(len(train_df)),
-        "training_rows_used": int(len(train_sample)),
-        "validation_rows": int(len(validation_df)),
-        "feature_count": int(len(feature_columns)),
-        "features": feature_columns,
-        "precision": float(precision),
-        "recall": float(recall),
-        "f1": float(f1),
-        "roc_auc": float(roc_auc) if roc_auc is not None else None,
-        "pr_auc": float(pr_auc) if pr_auc is not None else None,
-        "validation_class_distribution": {
-            str(int(label)): int(count)
-            for label, count in y_validation.value_counts().items()
-        },
-    }
-
-    with open(METRICS_PATH, "w", encoding="utf-8") as file:
-        json.dump(metrics, file, indent=4)
-
-    print("Metrics saved to:", METRICS_PATH)
-    print("\n========== STEP 11 COMPLETED ==========")
 
 # # ============================================================
 # # TRAIN

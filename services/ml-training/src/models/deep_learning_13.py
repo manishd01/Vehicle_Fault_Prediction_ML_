@@ -4,6 +4,7 @@ from pathlib import Path
 from collections import Counter
 import json
 import random
+from xml.parsers.expat import model
 
 import numpy as np
 import pandas as pd
@@ -191,48 +192,56 @@ def create_training_sample(
     dataframe: pd.DataFrame,
     max_rows: int,
 ) -> pd.DataFrame:
-    """
-    Keep fault examples and sample normal examples to make training
-    manageable. Validation data is NOT resampled.
-    """
+    """Sample safely when both classes or only one class exists."""
+
     dataframe = dataframe.dropna(subset=[TARGET_COLUMN]).copy()
-    dataframe[TARGET_COLUMN] = pd.to_numeric(dataframe[TARGET_COLUMN], errors="coerce")
+    dataframe[TARGET_COLUMN] = pd.to_numeric(
+        dataframe[TARGET_COLUMN],
+        errors="coerce",
+    )
     dataframe = dataframe.dropna(subset=[TARGET_COLUMN])
+
+    if dataframe.empty:
+        raise ValueError("Training dataset contains no valid labels.")
 
     dataframe[TARGET_COLUMN] = dataframe[TARGET_COLUMN].astype(int)
 
-    normal_rows = dataframe[dataframe[TARGET_COLUMN] == 0]
-    fault_rows = dataframe[dataframe[TARGET_COLUMN] == 1]
-
-    if len(fault_rows) == 0:
-        raise ValueError("Training dataset contains no fault examples.")
+    if not set(dataframe[TARGET_COLUMN].unique()).issubset({0, 1}):
+        raise ValueError("fault_label must contain only 0 and 1.")
 
     if len(dataframe) <= max_rows:
         sample = dataframe.copy()
-    elif len(fault_rows) >= max_rows:
-        sample = fault_rows.sample(
-            n=max_rows,
-            random_state=SEED,
-        )
     else:
-        normal_count = max_rows - len(fault_rows)
+        normal_rows = dataframe[dataframe[TARGET_COLUMN] == 0]
+        fault_rows = dataframe[dataframe[TARGET_COLUMN] == 1]
 
-        sampled_normal = normal_rows.sample(
-            n=min(normal_count, len(normal_rows)),
-            random_state=SEED,
-        )
+        if normal_rows.empty or fault_rows.empty:
+            sample = dataframe.sample(
+                n=max_rows,
+                random_state=SEED,
+            )
+        else:
+            fault_count = min(len(fault_rows), max_rows // 3)
+            normal_count = min(
+                len(normal_rows),
+                max_rows - fault_count,
+            )
 
-        sample = pd.concat(
-            [fault_rows, sampled_normal],
-            axis=0,
-        ).sample(frac=1, random_state=SEED)
+            sample = pd.concat(
+                [
+                    fault_rows.sample(n=fault_count, random_state=SEED),
+                    normal_rows.sample(n=normal_count, random_state=SEED),
+                ],
+                ignore_index=True,
+            )
+
+    sample = sample.sample(
+        frac=1.0,
+        random_state=SEED,
+    ).reset_index(drop=True)
 
     print(f"Training rows used: {len(sample):,}")
-    print(
-        "Training sample label counts:",
-        Counter(sample[TARGET_COLUMN].tolist()),
-    )
-
+    print("Training sample label counts:", Counter(sample[TARGET_COLUMN]))
     return sample
 
 
@@ -256,6 +265,21 @@ def main():
 
     train_df = load_parquet_dataset(train_path)
     validation_df = load_parquet_dataset(validation_path)
+
+    validation_df = validation_df.dropna(subset=[TARGET_COLUMN]).copy()
+    validation_df[TARGET_COLUMN] = pd.to_numeric(
+        validation_df[TARGET_COLUMN],
+        errors="coerce",
+    )
+    validation_df = validation_df.dropna(subset=[TARGET_COLUMN])
+
+    if validation_df.empty:
+        raise ValueError("Validation dataset has no valid target labels.")
+
+    validation_df[TARGET_COLUMN] = validation_df[TARGET_COLUMN].astype(int)
+
+    if not set(validation_df[TARGET_COLUMN].unique()).issubset({0, 1}):
+        raise ValueError("Validation fault_label must contain only 0 and 1.")
 
     print(f"Original training shape: {train_df.shape}")
     print(f"Validation shape: {validation_df.shape}")
@@ -288,26 +312,26 @@ def main():
     normal_count = int((train_df[TARGET_COLUMN] == 0).sum())
     fault_count = int((train_df[TARGET_COLUMN] == 1).sum())
 
-    if normal_count == 0 or fault_count == 0:
-        metrics = {
-            "model": "pytorch_feedforward_neural_network",
-            "status": "skipped",
-            "reason": "Training data must contain both normal and fault examples.",
-            "training_rows": int(len(train_df)),
-            "normal_rows": normal_count,
-            "fault_rows": fault_count,
-        }
+    if train_df.empty:
+        raise ValueError("Training dataset is empty after label cleaning.")
 
-        with open(METRICS_PATH, "w", encoding="utf-8") as file:
-            json.dump(metrics, file, indent=4)
+    train_classes = sorted(train_df[TARGET_COLUMN].unique().tolist())
 
-        print("TRAINING SKIPPED: Training data does not contain both classes.")
-        print(f"Normal rows: {normal_count}")
-        print(f"Fault rows: {fault_count}")
-        print("Metrics saved:", METRICS_PATH)
-        print("No neural network model was trained or saved.")
-        print("\n========== STEP 13 SKIPPED ==========")
-        return
+    if not set(train_classes).issubset({0, 1}):
+        raise ValueError(f"Unexpected training labels: {train_classes}")
+
+    single_class_fallback = len(train_classes) == 1
+    fallback_class = int(train_classes[0]) if single_class_fallback else None
+
+    if single_class_fallback:
+        print(
+            f"WARNING: Training contains only class {fallback_class}. "
+            "A constant-prediction fallback will be used."
+        )
+    else:
+        print("Both normal and fault classes are present.")
+
+    train_df = create_training_sample(train_df, MAX_TRAIN_ROWS)
 
     train_df = create_training_sample(
         train_df,
@@ -403,30 +427,45 @@ def main():
     # 7. Train.
     print("\n========== TRAINING ==========")
 
-    for epoch in range(EPOCHS):
-        model.train()
-        total_loss = 0.0
-        rows_seen = 0
+    # 7. Train normally or configure a constant-prediction fallback.
+    print("\n========== TRAINING ==========")
 
-        for features, labels in train_loader:
-            features = features.to(DEVICE)
-            labels = labels.to(DEVICE)
+    if single_class_fallback:
+        with torch.no_grad():
+            for parameter in model.parameters():
+                parameter.zero_()
 
-            optimizer.zero_grad()
+            model.network[-1].bias.fill_(20.0 if fallback_class == 1 else -20.0)
 
-            logits = model(features)
-            loss = loss_function(logits, labels)
+        print(
+            f"Fallback configured for class {fallback_class}. "
+            "No neural-network training was performed."
+        )
+    else:
+        for epoch in range(EPOCHS):
+            model.train()
+            total_loss = 0.0
+            rows_seen = 0
 
-            loss.backward()
-            optimizer.step()
+            for features, labels in train_loader:
+                features = features.to(DEVICE)
+                labels = labels.to(DEVICE)
 
-            batch_rows = len(labels)
-            total_loss += loss.item() * batch_rows
-            rows_seen += batch_rows
+                optimizer.zero_grad()
+                logits = model(features)
+                loss = loss_function(logits, labels)
+                loss.backward()
+                optimizer.step()
 
-        average_loss = total_loss / max(rows_seen, 1)
+                batch_rows = len(labels)
+                total_loss += loss.item() * batch_rows
+                rows_seen += batch_rows
 
-        print(f"Epoch {epoch + 1:02d}/{EPOCHS} " f"| Training loss: {average_loss:.6f}")
+            average_loss = total_loss / max(rows_seen, 1)
+            print(
+                f"Epoch {epoch + 1:02d}/{EPOCHS} "
+                f"| Training loss: {average_loss:.6f}"
+            )
 
     # 8. Predict on the original, imbalanced validation data.
     print("\n========== VALIDATING MODEL ==========")
@@ -453,15 +492,16 @@ def main():
     f1 = f1_score(y_validation, y_pred, zero_division=0)
     accuracy = accuracy_score(y_validation, y_pred)
 
-    try:
-        roc_auc = roc_auc_score(y_validation, y_probability)
-    except ValueError:
+    if len(np.unique(y_validation)) == 2:
+        roc_auc = float(roc_auc_score(y_validation, y_probability))
+        pr_auc = float(average_precision_score(y_validation, y_probability))
+    else:
         roc_auc = None
-
-    try:
-        pr_auc = average_precision_score(y_validation, y_probability)
-    except ValueError:
         pr_auc = None
+        print(
+            "WARNING: Validation contains only one class. "
+            "ROC-AUC and PR-AUC are not reported."
+        )
 
     tn, fp, fn, tp = confusion_matrix(
         y_validation,
@@ -495,6 +535,17 @@ def main():
         "decision_threshold": DECISION_THRESHOLD,
         "target_column": TARGET_COLUMN,
         "seed": SEED,
+        "status": ("completed_with_warning" if single_class_fallback else "completed"),
+        "single_class_fallback": single_class_fallback,
+        "fallback_class": fallback_class,
+        "training_class_distribution": {
+            str(int(label)): int(count)
+            for label, count in Counter(y_train.tolist()).items()
+        },
+        "validation_class_distribution": {
+            str(int(label)): int(count)
+            for label, count in Counter(y_validation.tolist()).items()
+        },
     }
 
     torch.save(checkpoint, MODEL_PATH)
