@@ -1,6 +1,7 @@
 # export_onnx_17.py
 import json
 from pathlib import Path
+from sklearn.dummy import DummyClassifier
 
 import joblib
 import onnx
@@ -38,6 +39,30 @@ def main():
     print(f"Loading model: {model_path}")
 
     model = joblib.load(model_path)
+    # NEW: Do not export a fallback model as a real fault detector.
+    # NEW: Stop ONNX export when the model is a fallback.
+    from sklearn.dummy import DummyClassifier
+    from sklearn.pipeline import Pipeline
+
+    def contains_dummy_classifier(estimator):
+        """Check whether a model or its pipeline contains DummyClassifier."""
+        if isinstance(estimator, DummyClassifier):
+            return True
+
+        if isinstance(estimator, Pipeline):
+            return any(contains_dummy_classifier(step) for _, step in estimator.steps)
+        return False
+
+    if contains_dummy_classifier(model):
+        print(
+            "WARNING: ONNX export skipped because the saved model "
+            "contains DummyClassifier."
+        )
+        print(
+            "The training data must contain both normal (0) and "
+            "fault (1) examples before ONNX export can run."
+        )
+        return
 
     with open(metrics_path, encoding="utf-8") as file:
         metadata = json.load(file)

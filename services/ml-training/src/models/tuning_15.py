@@ -23,6 +23,34 @@ MAX_TRAIN_ROWS = 100_000
 SEED = 42
 
 
+def save_skipped_metrics(reason, train_df, validation_df):
+    """Save a clear warning when tuning cannot be evaluated reliably."""
+    metrics_path = METRICS_DIR / "random_forest_tuned.json"
+
+    metrics = {
+        "model": "tuned_random_forest",
+        "status": "skipped_missing_class",
+        "reason": reason,
+        "training_class_distribution": {
+            str(int(label)): int(count)
+            for label, count in train_df[TARGET_COLUMN].value_counts().items()
+        },
+        "validation_class_distribution": {
+            str(int(label)): int(count)
+            for label, count in validation_df[TARGET_COLUMN].value_counts().items()
+        },
+        "pr_auc": None,
+        "roc_auc": None,
+    }
+
+    with open(metrics_path, "w", encoding="utf-8") as file:
+        json.dump(metrics, file, indent=4)
+
+    print("\nWARNING: Random Forest tuning skipped.")
+    print(reason)
+    print(f"Metrics saved: {metrics_path}")
+
+
 def balanced_sample(dataframe):
     dataframe = dataframe.dropna(subset=[TARGET_COLUMN]).copy()
     dataframe[TARGET_COLUMN] = dataframe[TARGET_COLUMN].astype(int)
@@ -57,6 +85,48 @@ def main():
 
     train_df = load_split("train")
     validation_df = load_split("validation")
+
+    # NEW: Clean and validate target labels before tuning.
+    for dataset_name, dataframe in [
+        ("training", train_df),
+        ("validation", validation_df),
+    ]:
+        dataframe[TARGET_COLUMN] = np.asarray(dataframe[TARGET_COLUMN])
+        dataframe[TARGET_COLUMN] = dataframe[TARGET_COLUMN].astype("float64")
+        dataframe[TARGET_COLUMN] = dataframe[TARGET_COLUMN].replace(
+            [np.inf, -np.inf], np.nan
+        )
+        dataframe.dropna(subset=[TARGET_COLUMN], inplace=True)
+        dataframe[TARGET_COLUMN] = dataframe[TARGET_COLUMN].astype(int)
+
+        if not set(dataframe[TARGET_COLUMN].unique()).issubset({0, 1}):
+            raise ValueError(
+                f"{dataset_name.capitalize()} labels must contain only 0 and 1."
+            )
+
+        # NEW: Require both classes in training.
+        train_classes = set(train_df[TARGET_COLUMN].unique())
+
+        if train_classes != {0, 1}:
+            save_skipped_metrics(
+                "Training data must contain both normal (0) and fault (1) examples.",
+                train_df,
+                validation_df,
+            )
+            print("========== STEP 15 SKIPPED WITH WARNING ==========")
+            return
+
+        # NEW: Require both classes in validation for reliable model selection.
+        validation_classes = set(validation_df[TARGET_COLUMN].unique())
+
+        if validation_classes != {0, 1}:
+            save_skipped_metrics(
+                "Validation data must contain both normal (0) and fault (1) examples.",
+                train_df,
+                validation_df,
+            )
+            print("========== STEP 15 SKIPPED WITH WARNING ==========")
+            return
 
     train_df = balanced_sample(train_df)
 
@@ -98,7 +168,12 @@ def main():
 
         model.fit(X_train, y_train)
 
-        probabilities = model.predict_proba(X_validation)[:, 1]
+        # probabilities = model.predict_proba(X_validation)[:, 1]
+        model_classes = model.named_steps["classifier"].classes_
+        probability_columns = model.predict_proba(X_validation)
+
+        fault_column = list(model_classes).index(1)
+        probabilities = probability_columns[:, fault_column]
         pr_auc = average_precision_score(y_validation, probabilities)
         roc_auc = roc_auc_score(y_validation, probabilities)
 

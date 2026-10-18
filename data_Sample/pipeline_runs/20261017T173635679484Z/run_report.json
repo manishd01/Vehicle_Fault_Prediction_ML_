@@ -1,11 +1,11 @@
 {
   "run_id": "20261017T173635679484Z",
-  "status": "FAILED",
+  "status": "SUCCESS",
   "started_at_utc": "2026-10-17T17:36:35.686791+00:00",
-  "finished_at_utc": "2026-10-18T15:08:37.810405+00:00",
-  "elapsed_seconds_this_invocation": 49.18,
-  "last_completed_stage": 14,
-  "next_stage": 15,
+  "finished_at_utc": "2026-10-18T19:11:21.231388+00:00",
+  "elapsed_seconds_this_invocation": 2.1,
+  "last_completed_stage": 19,
+  "next_stage": null,
   "stages": {
     "1": {
       "number": 1,
@@ -207,16 +207,68 @@
     "15": {
       "number": 15,
       "name": "Model evaluation",
-      "status": "FAILED",
-      "attempts": 1,
-      "started_at_utc": "2026-10-18T15:08:27.907561+00:00",
-      "code_sha256": "9e46d47b92e9c3cd70e2853ad89dd04fafcbcbba1c6e87983a2e954cdc7fcd79",
+      "status": "SUCCESS",
+      "attempts": 2,
+      "started_at_utc": "2026-10-18T17:53:10.588804+00:00",
+      "code_sha256": "a98efb54eadd00b40b43497a7f797bd06ad9ab9e7c8e9a3e52e01f05aeb55010",
       "outputs": [
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\evaluation_14.json"
       ],
-      "error": "Command exited with code 1.\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/app/src/evaluation/evaluate_14.py\", line 163, in <module>\n    main()\n  File \"/app/src/evaluation/evaluate_14.py\", line 92, in main\n    probabilities = model.predict_proba(X_df)[:, 1]\n                    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\nIndexError: index 1 is out of bounds for axis 1 with size 1\n\n========== STEP 14: MODEL EVALUATION ==========\nValidation dataset: /app/data/processed/validation\n\nEvaluating Random Forest...\n",
-      "finished_at_utc": "2026-10-18T15:08:37.805277+00:00",
-      "elapsed_seconds": 9.89
+      "error": null,
+      "finished_at_utc": "2026-10-18T17:53:43.729719+00:00",
+      "elapsed_seconds": 33.13
+    },
+    "16": {
+      "number": 16,
+      "name": "Random Forest tuning",
+      "status": "SKIPPED_WITH_WARNING",
+      "attempts": 4,
+      "started_at_utc": "2026-10-18T18:23:48.383249+00:00",
+      "code_sha256": "757cc949e92c1220903027acb0c4f21ed7f95c0f32f6c3225bb9d8a8c8057217",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\random_forest_tuned.json"
+      ],
+      "error": null,
+      "finished_at_utc": "2026-10-18T18:24:01.550806+00:00",
+      "elapsed_seconds": 13.16
+    },
+    "17": {
+      "number": 17,
+      "name": "MLflow tracking",
+      "status": "SUCCESS",
+      "attempts": 1,
+      "started_at_utc": "2026-10-18T18:24:01.582606+00:00",
+      "code_sha256": "498a4147b009340e8b332aec583a034b5d95dfc04179213eb7a05f3d2b6ac779",
+      "outputs": [],
+      "error": null,
+      "finished_at_utc": "2026-10-18T18:24:32.285985+00:00",
+      "elapsed_seconds": 30.69
+    },
+    "18": {
+      "number": 18,
+      "name": "ONNX export",
+      "status": "SKIPPED_WITH_WARNING",
+      "attempts": 7,
+      "started_at_utc": "2026-10-18T19:06:33.701451+00:00",
+      "code_sha256": "eebeeca86eadaf2c17482c9f8294384c25c5c496c033b19e9da91e113f9f978b",
+      "outputs": [],
+      "error": null,
+      "finished_at_utc": "2026-10-18T19:06:40.971401+00:00",
+      "elapsed_seconds": 7.25
+    },
+    "19": {
+      "number": 19,
+      "name": "ONNX benchmark",
+      "status": "SUCCESS",
+      "attempts": 2,
+      "started_at_utc": "2026-10-18T19:11:21.191351+00:00",
+      "code_sha256": "e00319f11b08767005a520977c5b0ce2d2d63f8d57333ffc0291e030dc9fabc9",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\onnx_benchmark_18.json"
+      ],
+      "error": null,
+      "finished_at_utc": "2026-10-18T19:11:21.201295+00:00",
+      "elapsed_seconds": 0.0
     }
   },
   "input": {
@@ -226,5 +278,5 @@
     "excel_sheet": null,
     "csv_sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a"
   },
-  "failure": "Command exited with code 1.\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/app/src/evaluation/evaluate_14.py\", line 163, in <module>\n    main()\n  File \"/app/src/evaluation/evaluate_14.py\", line 92, in main\n    probabilities = model.predict_proba(X_df)[:, 1]\n                    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\nIndexError: index 1 is out of bounds for axis 1 with size 1\n\n========== STEP 14: MODEL EVALUATION ==========\nValidation dataset: /app/data/processed/validation\n\nEvaluating Random Forest...\n"
+  "failure": null
 }

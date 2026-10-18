@@ -1,0 +1,13 @@
+{
+    "model": "tuned_random_forest",
+    "status": "skipped_missing_class",
+    "reason": "Training data must contain both normal (0) and fault (1) examples.",
+    "training_class_distribution": {
+        "0": 157
+    },
+    "validation_class_distribution": {
+        "0": 34
+    },
+    "pr_auc": null,
+    "roc_auc": null
+}
