@@ -1,3 +1,5 @@
+# PS M:\projects\Resum_project\MLProject\Vehicle_Fault_Prediction> python .\run_pipeline.py ".\data\raw\sample_small_meterpt3.csv"
+
 from __future__ import annotations
 
 import argparse
@@ -1096,8 +1098,24 @@ def main() -> int:
             if code != 0:
                 error = f"Command exited with code {code}.\n{output[-5000:]}"
 
-            if code != 0:
-                error = f"Command exited with code {code}.\n{output[-5000:]}"
+            # NEW: Run the Stage 10 distribution check after the split succeeds.
+            if error is None and stage.get("post_command"):
+                post_command = docker_exec_command(
+                    compose_args,
+                    stage["service"],
+                    stage["post_command"],
+                    environment,
+                )
+
+                post_code, post_output = run_command(post_command)
+
+                output += "\n\n[Post-command output]\n" + post_output
+
+                if post_code != 0:
+                    error = (
+                        "Stage 10 split-distribution check failed.\n"
+                        f"{post_output[-5000:]}"
+                    )
 
             if stage["name"] == "MLflow tracking" and "Could not log " in output:
                 error = "MLflow tracking reported a logging failure."

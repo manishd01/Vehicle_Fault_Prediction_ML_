@@ -1,11 +1,11 @@
 {
   "run_id": "20261017T173635679484Z",
-  "status": "RUNNING",
+  "status": "SUCCESS",
   "started_at_utc": "2026-10-17T17:36:35.686791+00:00",
-  "finished_at_utc": "2026-10-18T19:28:44.877428+00:00",
-  "elapsed_seconds_this_invocation": 27.24,
+  "finished_at_utc": "2026-10-18T19:29:56.081347+00:00",
+  "elapsed_seconds_this_invocation": 98.45,
   "last_completed_stage": 19,
-  "next_stage": 13,
+  "next_stage": null,
   "stages": {
     "1": {
       "number": 1,
@@ -179,85 +179,84 @@
     },
     "13": {
       "number": 13,
-      "name": "Random Forest model",
-      "status": "SUCCESS",
-      "attempts": 2,
-      "started_at_utc": "2026-10-18T14:52:22.310972+00:00",
-      "code_sha256": "152f2b6486b9be9ba9e728ce2d7bd215fb3c142717cd5644f48906e38e82abe1",
-      "outputs": [
-        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\random_forest.json",
-        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\random_forest.joblib"
-      ],
-      "error": null,
-      "finished_at_utc": "2026-10-18T14:52:38.139774+00:00",
-      "elapsed_seconds": 15.82
-    },
-    "14": {
-      "number": 14,
       "name": "Deep-learning model",
       "status": "SUCCESS",
       "attempts": 3,
-      "started_at_utc": "2026-10-18T15:07:51.091065+00:00",
+      "started_at_utc": "2026-10-18T19:28:44.892015+00:00",
       "code_sha256": "6872c05f8009a33c0d37db1a31ebd2a2b612eca0ed16465ec7ab891ad06c9ceb",
       "outputs": [
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\deep_learning.json",
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\models\\deep_learning.pt"
       ],
       "error": null,
-      "finished_at_utc": "2026-10-18T15:08:27.852481+00:00",
-      "elapsed_seconds": 36.75
+      "finished_at_utc": "2026-10-18T19:29:19.416477+00:00",
+      "elapsed_seconds": 34.51
     },
-    "15": {
-      "number": 15,
+    "14": {
+      "number": 14,
       "name": "Model evaluation",
       "status": "SUCCESS",
-      "attempts": 2,
-      "started_at_utc": "2026-10-18T17:53:10.588804+00:00",
+      "attempts": 4,
+      "started_at_utc": "2026-10-18T19:29:19.430397+00:00",
       "code_sha256": "a98efb54eadd00b40b43497a7f797bd06ad9ab9e7c8e9a3e52e01f05aeb55010",
       "outputs": [
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\evaluation_14.json"
       ],
       "error": null,
-      "finished_at_utc": "2026-10-18T17:53:43.729719+00:00",
-      "elapsed_seconds": 33.13
+      "finished_at_utc": "2026-10-18T19:29:26.586223+00:00",
+      "elapsed_seconds": 7.15
     },
-    "16": {
-      "number": 16,
+    "15": {
+      "number": 15,
       "name": "Random Forest tuning",
       "status": "SKIPPED_WITH_WARNING",
-      "attempts": 4,
-      "started_at_utc": "2026-10-18T18:23:48.383249+00:00",
+      "attempts": 3,
+      "started_at_utc": "2026-10-18T19:29:26.609144+00:00",
       "code_sha256": "757cc949e92c1220903027acb0c4f21ed7f95c0f32f6c3225bb9d8a8c8057217",
       "outputs": [
         "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\random_forest_tuned.json"
       ],
       "error": null,
-      "finished_at_utc": "2026-10-18T18:24:01.550806+00:00",
-      "elapsed_seconds": 13.16
+      "finished_at_utc": "2026-10-18T19:29:33.227381+00:00",
+      "elapsed_seconds": 6.61
     },
-    "17": {
-      "number": 17,
+    "16": {
+      "number": 16,
       "name": "MLflow tracking",
       "status": "SUCCESS",
-      "attempts": 1,
-      "started_at_utc": "2026-10-18T18:24:01.582606+00:00",
+      "attempts": 5,
+      "started_at_utc": "2026-10-18T19:29:33.243565+00:00",
       "code_sha256": "498a4147b009340e8b332aec583a034b5d95dfc04179213eb7a05f3d2b6ac779",
       "outputs": [],
       "error": null,
-      "finished_at_utc": "2026-10-18T18:24:32.285985+00:00",
-      "elapsed_seconds": 30.69
+      "finished_at_utc": "2026-10-18T19:29:51.578337+00:00",
+      "elapsed_seconds": 18.33
     },
-    "18": {
-      "number": 18,
+    "17": {
+      "number": 17,
       "name": "ONNX export",
       "status": "SKIPPED_WITH_WARNING",
-      "attempts": 7,
-      "started_at_utc": "2026-10-18T19:06:33.701451+00:00",
+      "attempts": 2,
+      "started_at_utc": "2026-10-18T19:29:51.587081+00:00",
       "code_sha256": "eebeeca86eadaf2c17482c9f8294384c25c5c496c033b19e9da91e113f9f978b",
       "outputs": [],
       "error": null,
-      "finished_at_utc": "2026-10-18T19:06:40.971401+00:00",
-      "elapsed_seconds": 7.25
+      "finished_at_utc": "2026-10-18T19:29:56.060150+00:00",
+      "elapsed_seconds": 4.47
+    },
+    "18": {
+      "number": 18,
+      "name": "ONNX benchmark",
+      "status": "SUCCESS",
+      "attempts": 8,
+      "started_at_utc": "2026-10-18T19:29:56.069353+00:00",
+      "code_sha256": "e00319f11b08767005a520977c5b0ce2d2d63f8d57333ffc0291e030dc9fabc9",
+      "outputs": [
+        "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\metrics\\onnx_benchmark_18.json"
+      ],
+      "error": null,
+      "finished_at_utc": "2026-10-18T19:29:56.072487+00:00",
+      "elapsed_seconds": 0.0
     },
     "19": {
       "number": 19,
