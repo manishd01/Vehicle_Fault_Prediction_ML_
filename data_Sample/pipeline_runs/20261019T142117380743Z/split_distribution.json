@@ -1,0 +1,20 @@
+{
+  "train": {
+    "rows": 164,
+    "normal": 164,
+    "fault": 0,
+    "status": "warning"
+  },
+  "validation": {
+    "rows": 35,
+    "normal": 35,
+    "fault": 0,
+    "status": "warning"
+  },
+  "test": {
+    "rows": 36,
+    "normal": 26,
+    "fault": 10,
+    "status": "passed"
+  }
+}

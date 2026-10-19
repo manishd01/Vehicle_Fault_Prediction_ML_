@@ -57,22 +57,34 @@ print("Max timestamp:", timestamp_stats["max_timestamp"])
 
 
 # ============================================
-# 3. INDEX UNIQUENESS CHECK
+
+# ============================================
+# INDEX CHECK
 # ============================================
 
 print("\n========== INDEX CHECK ==========")
 
-index_stats = df.select(
-    count("*").alias("total_rows"),
-    countDistinct("_c0").alias("distinct_indexes"),
-    min("_c0").alias("min_index"),
-    max("_c0").alias("max_index"),
-).first()
+if "Unnamed: 0" in df.columns:
+    index_col = "Unnamed: 0"
+elif "_c0" in df.columns:
+    index_col = "_c0"
+else:
+    index_col = None
 
-print("Total rows:", index_stats["total_rows"])
-print("Distinct _c0:", index_stats["distinct_indexes"])
-print("Min _c0:", index_stats["min_index"])
-print("Max _c0:", index_stats["max_index"])
+if index_col is not None:
+    index_stats = df.selectExpr(
+        f"COUNT(`{index_col}`) AS total_rows",
+        f"COUNT(DISTINCT `{index_col}`) AS distinct_indexes",
+        f"MIN(`{index_col}`) AS min_index",
+        f"MAX(`{index_col}`) AS max_index",
+    )
+
+    index_stats.show(truncate=False)
+    print(f"Index column checked: {index_col}")
+
+else:
+    print("WARNING: No recognised index column found.")
+    print(f"Available columns: {df.columns}")
 
 
 # ============================================
@@ -81,10 +93,11 @@ print("Max _c0:", index_stats["max_index"])
 
 print("\n========== DUPLICATE INDEX CHECK ==========")
 
-duplicate_index = df.groupBy("_c0").count().filter(col("count") > 1).limit(10)
-
-duplicate_index.show(truncate=False)
-
+if index_col:
+    duplicate_index = df.groupBy(index_col).count().filter(col("count") > 1).limit(10)
+    duplicate_index.show(truncate=False)
+else:
+    print("WARNING: No recognised index column found.")
 
 # ============================================
 # 5. TIMESTAMP DUPLICATES

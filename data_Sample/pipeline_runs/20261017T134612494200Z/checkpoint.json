@@ -1,0 +1,26 @@
+{
+  "run_id": "20261017T134612494200Z",
+  "status": "RUNNING",
+  "started_at_utc": "2026-10-17T13:46:12.505580+00:00",
+  "updated_at_utc": "2026-10-17T13:46:26.707324+00:00",
+  "input": {
+    "path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261017T134612494200Z\\input.csv",
+    "sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a",
+    "csv_path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261017T134612494200Z\\input.csv",
+    "excel_sheet": null,
+    "csv_sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a"
+  },
+  "last_completed_stage": 0,
+  "next_stage": 1,
+  "stages": {
+    "1": {
+      "number": 1,
+      "name": "Data ingestion",
+      "status": "RUNNING",
+      "attempts": 1,
+      "started_at_utc": "2026-10-17T13:46:26.707273+00:00",
+      "code_sha256": "1613eac213c93758f9e221822a3402395bc8d4663457729dfb294081cbc2e1ae"
+    }
+  },
+  "failure": null
+}

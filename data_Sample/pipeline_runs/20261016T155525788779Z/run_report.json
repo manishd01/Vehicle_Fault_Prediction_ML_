@@ -1,0 +1,18 @@
+{
+  "run_id": "20261016T155525788779Z",
+  "status": "FAILED",
+  "started_at_utc": "2026-10-16T15:55:25.810486+00:00",
+  "finished_at_utc": "2026-10-16T15:56:09.471966+00:00",
+  "elapsed_seconds_this_invocation": 43.68,
+  "last_completed_stage": 0,
+  "next_stage": 1,
+  "stages": {},
+  "input": {
+    "path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261016T155525788779Z\\input.csv",
+    "sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a",
+    "csv_path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data_Sample\\pipeline_runs\\20261016T155525788779Z\\input.csv",
+    "excel_sheet": null,
+    "csv_sha256": "dddd7df9cc141aaf98416c6e225f016209326ea471c773acbd07af3795438b8a"
+  },
+  "failure": "Could not start pipeline services:\nrequest returned 500 Internal Server Error for API route and version http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/_ping, check if the server supports the requested API version\n"
+}

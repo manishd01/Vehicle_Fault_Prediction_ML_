@@ -3,6 +3,11 @@ from pyspark.sql.functions import (
     col,
     row_number,
     count,
+    rand,
+    floor,
+    greatest,
+    least,
+    lit,
     min as spark_min,
     max as spark_max,
 )
@@ -49,49 +54,68 @@ print("Total rows:", df.count())
 
 print("\n========== ORDERING DATA ==========")
 
-window = Window.orderBy("timestamp")
-
-df = df.withColumn("row_number", row_number().over(window))
-
-
-# ==============================
-# TOTAL ROW COUNT
-# ==============================
+print("\n========== STRATIFIED DATA SPLIT ==========")
 
 total_rows = df.count()
-
 print("Total rows:", total_rows)
 
+# Each fault_label class must have at least 3 rows
+class_counts = df.groupBy("fault_label").count()
+class_counts.show()
 
-# ==============================
-# SPLIT BOUNDARIES
-# ==============================
+too_small = class_counts.filter(col("count") < 3).count()
 
-train_end = int(total_rows * 0.70)
+if too_small > 0:
+    raise ValueError("Stratified split requires at least 3 rows per fault_label class.")
 
-validation_end = int(total_rows * 0.85)
+# Randomly order rows separately within each class
+class_window = Window.partitionBy("fault_label")
+random_window = Window.partitionBy("fault_label").orderBy(rand(42))
 
-print("\n========== SPLIT BOUNDARIES ==========")
+df = df.withColumn("_split_row", row_number().over(random_window))
+df = df.withColumn("_class_total", count("*").over(class_window))
 
-print(f"Train: 1 - {train_end}")
+# Allocate approximately 70% to train, 15% to validation, 15% to test
+df = df.withColumn(
+    "_train_end",
+    greatest(lit(1), floor(col("_class_total") * 0.70)).cast("int"),
+)
 
-print(f"Validation: " f"{train_end + 1} - {validation_end}")
+df = df.withColumn(
+    "_train_end",
+    least(col("_train_end"), col("_class_total") - 2),
+)
 
-print(f"Test: " f"{validation_end + 1} - {total_rows}")
+df = df.withColumn(
+    "_validation_end",
+    greatest(
+        col("_train_end") + 1,
+        floor(col("_class_total") * 0.85),
+    ).cast("int"),
+)
 
+df = df.withColumn(
+    "_validation_end",
+    least(col("_validation_end"), col("_class_total") - 1),
+)
 
-# ==============================
-# CREATE SPLITS
-# ==============================
-
-train_df = df.filter(col("row_number") <= train_end).drop("row_number")
+train_df = df.filter(col("_split_row") <= col("_train_end")).drop(
+    "_split_row", "_class_total", "_train_end", "_validation_end"
+)
 
 validation_df = df.filter(
-    (col("row_number") > train_end) & (col("row_number") <= validation_end)
-).drop("row_number")
+    (col("_split_row") > col("_train_end"))
+    & (col("_split_row") <= col("_validation_end"))
+).drop("_split_row", "_class_total", "_train_end", "_validation_end")
 
-test_df = df.filter(col("row_number") > validation_end).drop("row_number")
+test_df = df.filter(col("_split_row") > col("_validation_end")).drop(
+    "_split_row", "_class_total", "_train_end", "_validation_end"
+)
 
+print("\n========== SPLIT BOUNDARIES ==========")
+print("Train: approximately 70%")
+print("Validation: approximately 15%")
+print("Test: approximately 15%")
 
 # ==============================
 # SPLIT COUNTS
@@ -157,39 +181,39 @@ test_df.select(
 # TEMPORAL LEAKAGE CHECK
 # ==============================
 
-print("\n========== TEMPORAL LEAKAGE CHECK ==========")
+# print("\n========== TEMPORAL LEAKAGE CHECK ==========")
 
-train_max = train_df.select(spark_max("timestamp")).collect()[0][0]
+# train_max = train_df.select(spark_max("timestamp")).collect()[0][0]
 
-validation_min = validation_df.select(spark_min("timestamp")).collect()[0][0]
+# validation_min = validation_df.select(spark_min("timestamp")).collect()[0][0]
 
-validation_max = validation_df.select(spark_max("timestamp")).collect()[0][0]
+# validation_max = validation_df.select(spark_max("timestamp")).collect()[0][0]
 
-test_min = test_df.select(spark_min("timestamp")).collect()[0][0]
-
-
-print("Train max:", train_max)
-print("Validation min:", validation_min)
-print("Validation max:", validation_max)
-print("Test min:", test_min)
+# test_min = test_df.select(spark_min("timestamp")).collect()[0][0]
 
 
-if train_max <= validation_min:
-
-    print("Train → Validation temporal ordering: PASS")
-
-else:
-
-    print("Train → Validation temporal ordering: FAIL")
+# print("Train max:", train_max)
+# print("Validation min:", validation_min)
+# print("Validation max:", validation_max)
+# print("Test min:", test_min)
 
 
-if validation_max <= test_min:
+# if train_max <= validation_min:
 
-    print("Validation → Test temporal ordering: PASS")
+#     print("Train → Validation temporal ordering: PASS")
 
-else:
+# else:
 
-    print("Validation → Test temporal ordering: FAIL")
+#     print("Train → Validation temporal ordering: FAIL")
+
+
+# if validation_max <= test_min:
+
+#     print("Validation → Test temporal ordering: PASS")
+
+# else:
+
+#     print("Validation → Test temporal ordering: FAIL")
 
 
 # ==============================
