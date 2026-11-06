@@ -1,0 +1,21 @@
+# Databricks configuration
+
+databricks:
+  catalog: main
+  schema: vehicle_fault_prediction
+
+  compute:
+    runtime: "15.4 LTS"
+
+  storage:
+    volume: vehicle_fault_data
+    source_file: "MetroPT3(AirCompressor).csv"
+
+  bronze:
+    table: bronze_sensor_raw
+    format: delta
+    write_mode: append
+
+  dataset:
+    machine_id: metropt3_compressor_01
+    timestamp_column: timestamp
