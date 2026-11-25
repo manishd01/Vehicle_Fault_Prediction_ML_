@@ -11,7 +11,7 @@ services:
       - ./models:/app/models
       - ./pipelines:/app/pipelines
       - ./configs:/app/configs
-      - ./services/ml-training:/app
+      # - ./services/ml-training:/app
     working_dir: /app
     command: ["tail", "-f", "/dev/null"]
 

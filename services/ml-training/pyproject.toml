@@ -1,0 +1,15 @@
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vehicle-ml-training"
+version = "0.1.0"
+description = "Vehicle Fault Prediction ML Training Pipeline"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src", "src.*", "ml_training", "ml_training.*"]
+namespaces = true
