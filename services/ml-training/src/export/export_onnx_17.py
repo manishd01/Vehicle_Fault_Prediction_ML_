@@ -1,10 +1,11 @@
-# export_onnx_17.py
 import json
 from pathlib import Path
-from sklearn.dummy import DummyClassifier
 
 import joblib
 import onnx
+
+from sklearn.dummy import DummyClassifier
+from sklearn.pipeline import Pipeline
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
 
@@ -13,21 +14,38 @@ MODEL_DIR = DATA_ROOT / "models"
 METRICS_DIR = DATA_ROOT / "metrics"
 EXPORT_DIR = MODEL_DIR / "onnx"
 
-EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+def contains_dummy_classifier(estimator):
+    if isinstance(estimator, DummyClassifier):
+        return True
+
+    if isinstance(estimator, Pipeline):
+        return any(contains_dummy_classifier(step) for _, step in estimator.steps)
+
+    return False
 
 
-def main():
+def export_random_forest_onnx(config=None):
+    config = config or {}
+
+    model_dir = Path(config.get("model_dir", MODEL_DIR))
+    metrics_dir = Path(config.get("metrics_dir", METRICS_DIR))
+    export_dir = Path(config.get("export_dir", EXPORT_DIR))
+    target_opset = config.get("target_opset", 17)
+
+    export_dir.mkdir(parents=True, exist_ok=True)
+
     print("\n========== STEP 17: ONNX EXPORT ==========")
 
-    tuned_model_path = MODEL_DIR / "random_forest_tuned.joblib"
-    base_model_path = MODEL_DIR / "random_forest.joblib"
+    tuned_model_path = model_dir / "random_forest_tuned.joblib"
+    base_model_path = model_dir / "random_forest.joblib"
 
     if tuned_model_path.exists():
         model_path = tuned_model_path
-        metrics_path = METRICS_DIR / "random_forest_tuned.json"
+        metrics_path = metrics_dir / "random_forest_tuned.json"
     elif base_model_path.exists():
         model_path = base_model_path
-        metrics_path = METRICS_DIR / "random_forest.json"
+        metrics_path = metrics_dir / "random_forest.json"
     else:
         raise FileNotFoundError(
             "No Random Forest model found. Run Step 12 or Step 15 first."
@@ -39,19 +57,6 @@ def main():
     print(f"Loading model: {model_path}")
 
     model = joblib.load(model_path)
-    # NEW: Do not export a fallback model as a real fault detector.
-    # NEW: Stop ONNX export when the model is a fallback.
-    from sklearn.dummy import DummyClassifier
-    from sklearn.pipeline import Pipeline
-
-    def contains_dummy_classifier(estimator):
-        """Check whether a model or its pipeline contains DummyClassifier."""
-        if isinstance(estimator, DummyClassifier):
-            return True
-
-        if isinstance(estimator, Pipeline):
-            return any(contains_dummy_classifier(step) for _, step in estimator.steps)
-        return False
 
     if contains_dummy_classifier(model):
         print(
@@ -62,7 +67,7 @@ def main():
             "The training data must contain both normal (0) and "
             "fault (1) examples before ONNX export can run."
         )
-        return
+        return None
 
     with open(metrics_path, encoding="utf-8") as file:
         metadata = json.load(file)
@@ -76,21 +81,19 @@ def main():
 
     print(f"Input feature count: {feature_count}")
 
-    # The exported ONNX model accepts float32 feature matrices.
     initial_types = [("float_input", FloatTensorType([None, feature_count]))]
 
     onnx_model = convert_sklearn(
         model,
         initial_types=initial_types,
-        target_opset=17,
+        target_opset=target_opset,
     )
 
-    output_path = EXPORT_DIR / "random_forest.onnx"
+    output_path = export_dir / "random_forest.onnx"
 
     with open(output_path, "wb") as file:
         file.write(onnx_model.SerializeToString())
 
-    # Verify that the exported ONNX graph is structurally valid.
     loaded_onnx = onnx.load(str(output_path))
     onnx.checker.check_model(loaded_onnx)
 
@@ -104,7 +107,7 @@ def main():
         "output_format": "converted scikit-learn model outputs",
     }
 
-    metadata_path = EXPORT_DIR / "random_forest_metadata.json"
+    metadata_path = export_dir / "random_forest_metadata.json"
 
     with open(metadata_path, "w", encoding="utf-8") as file:
         json.dump(export_metadata, file, indent=4)
@@ -113,6 +116,15 @@ def main():
     print(f"Export metadata saved: {metadata_path}")
     print("ONNX structural validation passed.")
     print("========== STEP 17 COMPLETED ==========")
+
+    return {
+        "onnx_path": str(output_path),
+        "metadata_path": str(metadata_path),
+    }
+
+
+def main():
+    export_random_forest_onnx()
 
 
 if __name__ == "__main__":
