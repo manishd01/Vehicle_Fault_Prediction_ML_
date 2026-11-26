@@ -1,0 +1,105 @@
+{
+    "run_id": "20261126_180851",
+    "mode": "local",
+    "status": "COMPLETED",
+    "created_at": "2026-11-26T12:38:51.865782+00:00",
+    "updated_at": "2026-11-26T13:00:25.310188+00:00",
+    "input_path": "M:\\projects\\Resum_project\\MLProject\\Vehicle_Fault_Prediction\\data\\raw\\sample_small_meterpt3.csv",
+    "input_fingerprint": "c3f8685f06431e0258e857b974e7063496401bb417718825b6cf36da61a11a39",
+    "input_container_path": "/app/data/raw/sample_small_meterpt3.csv",
+    "stages": {
+        "1": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:40:08.211040+00:00",
+            "job": "01_ingest.py"
+        },
+        "2": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:40:40.280978+00:00",
+            "job": "02_inspect_parquet.py"
+        },
+        "3": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:41:05.601156+00:00",
+            "job": "03_validate_data.py"
+        },
+        "4": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:41:44.821906+00:00",
+            "job": "04_data_quality.py"
+        },
+        "5": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:42:18.322334+00:00",
+            "job": "05_time_series_analysis.py"
+        },
+        "6": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:42:54.905297+00:00",
+            "job": "06_time_series_preparation.py"
+        },
+        "7": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:43:21.688955+00:00",
+            "job": "07_target_creation.py"
+        },
+        "8": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:43:54.699267+00:00",
+            "job": "08_feature_engineering.py"
+        },
+        "9": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:44:57.683744+00:00",
+            "job": "09_feature_analysis.py"
+        },
+        "10": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:45:37.133407+00:00",
+            "job": "10_train_val_test_split.py"
+        },
+        "11": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:59:22.491224+00:00",
+            "script": "src/models/baseline_11.py"
+        },
+        "12": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:59:28.075425+00:00",
+            "script": "src/models/random_forest_12.py"
+        },
+        "13": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:59:39.774144+00:00",
+            "script": "src/models/deep_learning_13.py"
+        },
+        "14": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:59:48.083091+00:00",
+            "script": "src/evaluation/evaluate_14.py"
+        },
+        "15": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T12:59:54.376104+00:00",
+            "script": "src/models/tuning_15.py"
+        },
+        "16": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T13:00:15.497229+00:00",
+            "script": "src/experiments/mlflow_tracking_16.py"
+        },
+        "17": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T13:00:20.428401+00:00",
+            "script": "src/export/export_onnx_17.py"
+        },
+        "18": {
+            "status": "COMPLETED",
+            "updated_at": "2026-11-26T13:00:25.308313+00:00",
+            "script": "src/benchmarking/benchmark_onnx_18.py"
+        }
+    },
+    "failed_at": "2026-11-26T12:45:39.117808+00:00",
+    "error": "ML stage 11 failed with exit code 2.",
+    "completed_at": "2026-11-26T13:00:25.310166+00:00"
+}

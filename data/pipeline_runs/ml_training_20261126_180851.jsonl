@@ -1,0 +1,40 @@
+{"timestamp": "2026-11-26T12:59:16.585294+00:00", "level": "INFO", "message": "ML training execution started.", "selected_stages": [11]}
+{"timestamp": "2026-11-26T12:59:16.646581+00:00", "level": "INFO", "message": "Required ML datasets validated."}
+{"timestamp": "2026-11-26T12:59:16.653252+00:00", "level": "INFO", "message": "Starting ML stage 11: Baseline Logistic Regression", "stage": 11, "script": "src/models/baseline_11.py"}
+{"timestamp": "2026-11-26T12:59:21.641713+00:00", "level": "INFO", "message": "Completed ML stage 11: Baseline Logistic Regression", "stage": 11}
+{"timestamp": "2026-11-26T12:59:21.646185+00:00", "level": "INFO", "message": "All requested ML stages completed successfully.", "completed_stages": [11]}
+{"timestamp": "2026-11-26T12:59:23.796783+00:00", "level": "INFO", "message": "ML training execution started.", "selected_stages": [12]}
+{"timestamp": "2026-11-26T12:59:23.823660+00:00", "level": "INFO", "message": "Required ML datasets validated."}
+{"timestamp": "2026-11-26T12:59:23.843677+00:00", "level": "INFO", "message": "Starting ML stage 12: Random Forest", "stage": 12, "script": "src/models/random_forest_12.py"}
+{"timestamp": "2026-11-26T12:59:27.473750+00:00", "level": "INFO", "message": "Completed ML stage 12: Random Forest", "stage": 12}
+{"timestamp": "2026-11-26T12:59:27.478703+00:00", "level": "INFO", "message": "All requested ML stages completed successfully.", "completed_stages": [12]}
+{"timestamp": "2026-11-26T12:59:29.450633+00:00", "level": "INFO", "message": "ML training execution started.", "selected_stages": [13]}
+{"timestamp": "2026-11-26T12:59:29.495665+00:00", "level": "INFO", "message": "Required ML datasets validated."}
+{"timestamp": "2026-11-26T12:59:29.507705+00:00", "level": "INFO", "message": "Starting ML stage 13: Deep Learning", "stage": 13, "script": "src/models/deep_learning_13.py"}
+{"timestamp": "2026-11-26T12:59:38.953976+00:00", "level": "INFO", "message": "Completed ML stage 13: Deep Learning", "stage": 13}
+{"timestamp": "2026-11-26T12:59:38.959036+00:00", "level": "INFO", "message": "All requested ML stages completed successfully.", "completed_stages": [13]}
+{"timestamp": "2026-11-26T12:59:41.638878+00:00", "level": "INFO", "message": "ML training execution started.", "selected_stages": [14]}
+{"timestamp": "2026-11-26T12:59:41.677888+00:00", "level": "INFO", "message": "Required ML datasets validated."}
+{"timestamp": "2026-11-26T12:59:41.687766+00:00", "level": "INFO", "message": "Starting ML stage 14: Model Evaluation", "stage": 14, "script": "src/evaluation/evaluate_14.py"}
+{"timestamp": "2026-11-26T12:59:47.607488+00:00", "level": "INFO", "message": "Completed ML stage 14: Model Evaluation", "stage": 14}
+{"timestamp": "2026-11-26T12:59:47.612239+00:00", "level": "INFO", "message": "All requested ML stages completed successfully.", "completed_stages": [14]}
+{"timestamp": "2026-11-26T12:59:49.008814+00:00", "level": "INFO", "message": "ML training execution started.", "selected_stages": [15]}
+{"timestamp": "2026-11-26T12:59:49.047598+00:00", "level": "INFO", "message": "Required ML datasets validated."}
+{"timestamp": "2026-11-26T12:59:49.053951+00:00", "level": "INFO", "message": "Starting ML stage 15: Hyperparameter Tuning", "stage": 15, "script": "src/models/tuning_15.py"}
+{"timestamp": "2026-11-26T12:59:53.991790+00:00", "level": "INFO", "message": "Completed ML stage 15: Hyperparameter Tuning", "stage": 15}
+{"timestamp": "2026-11-26T12:59:53.996871+00:00", "level": "INFO", "message": "All requested ML stages completed successfully.", "completed_stages": [15]}
+{"timestamp": "2026-11-26T12:59:55.394263+00:00", "level": "INFO", "message": "ML training execution started.", "selected_stages": [16]}
+{"timestamp": "2026-11-26T12:59:55.403679+00:00", "level": "INFO", "message": "Required ML datasets validated."}
+{"timestamp": "2026-11-26T12:59:55.414008+00:00", "level": "INFO", "message": "Starting ML stage 16: MLflow Tracking", "stage": 16, "script": "src/experiments/mlflow_tracking_16.py"}
+{"timestamp": "2026-11-26T13:00:15.129807+00:00", "level": "INFO", "message": "Completed ML stage 16: MLflow Tracking", "stage": 16}
+{"timestamp": "2026-11-26T13:00:15.133156+00:00", "level": "INFO", "message": "All requested ML stages completed successfully.", "completed_stages": [16]}
+{"timestamp": "2026-11-26T13:00:16.631726+00:00", "level": "INFO", "message": "ML training execution started.", "selected_stages": [17]}
+{"timestamp": "2026-11-26T13:00:16.635897+00:00", "level": "INFO", "message": "Required ML datasets validated."}
+{"timestamp": "2026-11-26T13:00:16.642363+00:00", "level": "INFO", "message": "Starting ML stage 17: ONNX Export", "stage": 17, "script": "src/export/export_onnx_17.py"}
+{"timestamp": "2026-11-26T13:00:19.980028+00:00", "level": "INFO", "message": "Completed ML stage 17: ONNX Export", "stage": 17}
+{"timestamp": "2026-11-26T13:00:19.983950+00:00", "level": "INFO", "message": "All requested ML stages completed successfully.", "completed_stages": [17]}
+{"timestamp": "2026-11-26T13:00:21.265926+00:00", "level": "INFO", "message": "ML training execution started.", "selected_stages": [18]}
+{"timestamp": "2026-11-26T13:00:21.307656+00:00", "level": "INFO", "message": "Required ML datasets validated."}
+{"timestamp": "2026-11-26T13:00:21.336450+00:00", "level": "INFO", "message": "Starting ML stage 18: ONNX Benchmarking", "stage": 18, "script": "src/benchmarking/benchmark_onnx_18.py"}
+{"timestamp": "2026-11-26T13:00:24.868709+00:00", "level": "INFO", "message": "Completed ML stage 18: ONNX Benchmarking", "stage": 18}
+{"timestamp": "2026-11-26T13:00:24.872490+00:00", "level": "INFO", "message": "All requested ML stages completed successfully.", "completed_stages": [18]}

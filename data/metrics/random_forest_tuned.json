@@ -1,11 +1,12 @@
 {
     "model": "tuned_random_forest",
     "parameters": {
-        "n_estimators": 100,
-        "max_depth": null,
-        "min_samples_leaf": 2
+        "n_estimators": 80,
+        "max_depth": 16,
+        "min_samples_leaf": 1
     },
     "feature_columns": [
+        "Unnamed: 0",
         "TP2",
         "TP3",
         "H1",
@@ -68,9 +69,9 @@
         "hour_sin",
         "hour_cos"
     ],
-    "training_rows_used": 100000,
-    "validation_rows": 227542,
-    "pr_auc": 0.15269346782728324,
-    "roc_auc": 0.9811907942163,
+    "training_rows_used": 164,
+    "validation_rows": 35,
+    "pr_auc": 1.0,
+    "roc_auc": 1.0,
     "selection_metric": "validation_pr_auc"
 }

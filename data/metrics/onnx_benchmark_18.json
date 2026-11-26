@@ -2,21 +2,21 @@
   "step": 18,
   "model": "random_forest.onnx",
   "test_data": "/app/data/processed/test",
-  "rows_benchmarked": 5000,
-  "feature_count": 61,
-  "batch_size": 256,
+  "rows_benchmarked": 36,
+  "feature_count": 62,
+  "batch_size": 36,
   "warmup_runs": 3,
   "benchmark_runs": 20,
   "onnx_cpu": {
-    "average_batch_latency_ms": 0.35145804999956454,
-    "p95_batch_latency_ms": 0.3955498004870606,
-    "average_latency_per_row_ms": 0.001372883007810799,
-    "full_dataset_inference_seconds": 0.007612067000081879,
-    "throughput_rows_per_second": 656851.8117281703
+    "average_batch_latency_ms": 0.078395449781965,
+    "p95_batch_latency_ms": 0.0923537478229264,
+    "average_latency_per_row_ms": 0.002177651382832361,
+    "full_dataset_inference_seconds": 0.00011394100147299469,
+    "throughput_rows_per_second": 315952.98913124274
   },
   "model_size": {
-    "bytes": 692586,
-    "megabytes": 0.6605014801025391
+    "bytes": 16147,
+    "megabytes": 0.015398979187011719
   },
   "prediction_consistency": {
     "sklearn_model_found": true,
@@ -28,6 +28,7 @@
     "CPUExecutionProvider"
   ],
   "feature_columns": [
+    "Unnamed: 0",
     "TP2",
     "TP3",
     "H1",

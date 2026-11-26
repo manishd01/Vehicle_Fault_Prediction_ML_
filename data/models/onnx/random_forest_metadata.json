@@ -1,8 +1,9 @@
 {
     "source_model": "/app/data/models/random_forest_tuned.joblib",
     "onnx_model": "/app/data/models/onnx/random_forest.onnx",
-    "feature_count": 61,
+    "feature_count": 62,
     "feature_columns": [
+        "Unnamed: 0",
         "TP2",
         "TP3",
         "H1",
