@@ -1,14 +1,3 @@
-"""
-STEP 18: ONNX Model Benchmarking
-
-Measures:
-- Prediction consistency against the original sklearn model, if found
-- ONNX inference latency
-- Throughput
-- ONNX model size
-- Benchmark report saved as JSON
-"""
-
 import json
 import time
 from pathlib import Path
@@ -17,19 +6,15 @@ import numpy as np
 import pandas as pd
 import onnxruntime as ort
 
-# --------------------------------------------------
-# CONFIGURATION
-# --------------------------------------------------
-
 DATA_ROOT = Path("/app/data")
 MODEL_ROOTS = [
     Path("/app/data/models"),
     Path("/app/models"),
 ]
 
-ONNX_DIR = Path("/app/data/models/onnx")
+ONNX_DIR = DATA_ROOT / "models" / "onnx"
 METADATA_PATH = ONNX_DIR / "random_forest_metadata.json"
-REPORT_PATH = Path("/app/data/metrics/onnx_benchmark_18.json")
+REPORT_PATH = DATA_ROOT / "metrics" / "onnx_benchmark_18.json"
 
 MAX_ROWS = 5000
 BATCH_SIZE = 256
@@ -37,88 +22,64 @@ WARMUP_RUNS = 3
 BENCHMARK_RUNS = 20
 
 
-def find_onnx_model():
-    """Find the exported Random Forest ONNX model."""
-
+def find_onnx_model(onnx_dir):
     candidates = [
-        ONNX_DIR / "random_forest.onnx",
-        ONNX_DIR / "random_forest_model.onnx",
+        onnx_dir / "random_forest.onnx",
+        onnx_dir / "random_forest_model.onnx",
     ]
 
     for path in candidates:
         if path.exists():
             return path
 
-    matches = list(ONNX_DIR.glob("*.onnx")) if ONNX_DIR.exists() else []
+    matches = list(onnx_dir.glob("*.onnx")) if onnx_dir.exists() else []
 
     if matches:
         return matches[0]
 
-    raise FileNotFoundError(
-        f"No ONNX model found in {ONNX_DIR}. " "Check the output path from Step 17."
-    )
+    raise FileNotFoundError(f"No ONNX model found in {onnx_dir}. Check Step 17.")
 
 
-def find_test_data():
-    """Find a parquet file or directory containing test data."""
-
+def find_test_data(data_root):
     candidates = []
 
-    for path in DATA_ROOT.rglob("*"):
+    for path in data_root.rglob("*"):
         if path.name.lower() in {"test", "test.parquet", "test.parquet.gzip"}:
             if path.is_file() and path.suffix == ".parquet":
                 candidates.append(path)
             elif path.is_dir() and any(path.rglob("*.parquet")):
                 candidates.append(path)
 
-    # Also accept parquet filenames containing 'test'.
-    for path in DATA_ROOT.rglob("*test*.parquet"):
+    for path in data_root.rglob("*test*.parquet"):
         if path.is_file() and path not in candidates:
             candidates.append(path)
 
     if not candidates:
-        raise FileNotFoundError(
-            f"Could not find test parquet data under {DATA_ROOT}. "
-            "Check the output of Step 10."
-        )
+        raise FileNotFoundError(f"Could not find test parquet data under {data_root}.")
 
-    # Prefer the most specific test directory/file.
     candidates.sort(key=lambda p: len(p.parts), reverse=True)
     return candidates[0]
 
 
-def load_metadata():
-    """Load feature information produced by Step 17."""
-
-    if not METADATA_PATH.exists():
-        raise FileNotFoundError(f"Metadata not found: {METADATA_PATH}")
-
-    with open(METADATA_PATH, "r", encoding="utf-8") as file:
-        return json.load(file)
-
-
 def get_feature_columns(metadata, dataframe, session):
-    """Resolve feature names from metadata or ONNX input shape."""
-
-    possible_keys = [
+    for key in [
         "feature_columns",
         "features",
         "input_features",
         "feature_names",
-    ]
-
-    for key in possible_keys:
+    ]:
         value = metadata.get(key)
+
         if isinstance(value, list) and value:
             missing = [col for col in value if col not in dataframe.columns]
+
             if missing:
                 raise ValueError(
-                    f"Metadata lists features missing from test data: "
-                    f"{missing[:10]}"
+                    f"Metadata lists features missing from test data: {missing[:10]}"
                 )
+
             return value
 
-    # Fall back to the ONNX model's declared input dimension.
     input_info = session.get_inputs()[0]
     shape = input_info.shape
     expected_features = shape[-1] if shape else None
@@ -132,35 +93,33 @@ def get_feature_columns(metadata, dataframe, session):
         "failure",
     }
 
-    columns = [col for col in dataframe.columns if col.lower() not in excluded]
-
-    columns = [col for col in columns if pd.api.types.is_numeric_dtype(dataframe[col])]
+    columns = [
+        col
+        for col in dataframe.columns
+        if col.lower() not in excluded and pd.api.types.is_numeric_dtype(dataframe[col])
+    ]
 
     if isinstance(expected_features, int):
         if len(columns) != expected_features:
             raise ValueError(
                 f"Found {len(columns)} candidate features, but ONNX "
                 f"expects {expected_features}. Add the exact feature list "
-                "to random_forest_metadata.json to avoid incorrect ordering."
+                "to random_forest_metadata.json."
             )
         return columns
 
     raise ValueError(
-        "Could not determine feature columns. Add 'feature_columns' "
+        "Could not determine feature columns. Add feature_columns "
         "to random_forest_metadata.json."
     )
 
 
-def find_sklearn_model():
-    """Find an optional saved sklearn model for consistency checks."""
-
-    extensions = ("*.joblib", "*.pkl", "*.pickle")
-
-    for root in MODEL_ROOTS:
+def find_sklearn_model(model_roots):
+    for root in model_roots:
         if not root.exists():
             continue
 
-        for extension in extensions:
+        for extension in ("*.joblib", "*.pkl", "*.pickle"):
             for path in root.rglob(extension):
                 if "random_forest" in path.name.lower():
                     return path
@@ -168,42 +127,56 @@ def find_sklearn_model():
     return None
 
 
-def load_sklearn_model(path):
-    """Load a saved sklearn model."""
-
-    import joblib
-
-    return joblib.load(path)
-
-
 def predict_onnx(session, features):
-    """Run ONNX inference on float32 input."""
-
     input_name = session.get_inputs()[0].name
-    outputs = session.run(
+
+    return session.run(
         None,
         {input_name: features.astype(np.float32, copy=False)},
     )
-    return outputs
 
 
-def main():
+def benchmark_onnx(config=None, test_df=None):
+
+    config = config or {}
+
+    data_root = Path(config.get("data_root", DATA_ROOT))
+    model_roots = [Path(path) for path in config.get("model_roots", MODEL_ROOTS)]
+    onnx_dir = Path(config.get("onnx_dir", ONNX_DIR))
+    metadata_path = Path(config.get("metadata_path", METADATA_PATH))
+    report_path = Path(config.get("report_path", REPORT_PATH))
+
+    max_rows = config.get("max_rows", MAX_ROWS)
+    batch_size = config.get("batch_size", BATCH_SIZE)
+    warmup_runs = config.get("warmup_runs", WARMUP_RUNS)
+    benchmark_runs = config.get("benchmark_runs", BENCHMARK_RUNS)
+
     print("\n========== STEP 18: ONNX BENCHMARKING ==========")
 
-    onnx_path = find_onnx_model()
-    metadata = load_metadata()
-    test_path = find_test_data()
+    onnx_path = find_onnx_model(onnx_dir)
+
+    if not metadata_path.exists():
+        raise FileNotFoundError(f"Metadata not found: {metadata_path}")
+
+    with open(metadata_path, "r", encoding="utf-8") as file:
+        metadata = json.load(file)
+
+    if test_df is None:
+        test_path = find_test_data(data_root)
+        dataframe = pd.read_parquet(test_path)
+        print(f"Test data: {test_path}")
+    else:
+        dataframe = test_df.copy()
+        print("Using externally supplied test DataFrame.")
+        test_path = "externally_supplied_dataframe"
 
     print(f"ONNX model: {onnx_path}")
-    print(f"Test data:  {test_path}")
 
-    dataframe = pd.read_parquet(test_path)
-    dataframe = dataframe.head(MAX_ROWS).copy()
+    dataframe = dataframe.head(max_rows).copy()
 
     if dataframe.empty:
         raise ValueError("Test dataset is empty.")
 
-    # Create the ONNX Runtime CPU session.
     session = ort.InferenceSession(
         str(onnx_path),
         providers=["CPUExecutionProvider"],
@@ -223,27 +196,17 @@ def main():
 
     print(f"Rows benchmarked: {len(X)}")
     print(f"Features:         {len(feature_columns)}")
-    print(f"ONNX inputs:      {[item.name for item in session.get_inputs()]}")
-    print(f"ONNX outputs:     {[item.name for item in session.get_outputs()]}")
 
-    # ----------------------------------------------
     # 1. Warm-up
-    # ----------------------------------------------
+    batch = X[: min(batch_size, len(X))]
 
-    sample = X[: min(BATCH_SIZE, len(X))]
+    for _ in range(warmup_runs):
+        predict_onnx(session, batch)
 
-    for _ in range(WARMUP_RUNS):
-        predict_onnx(session, sample)
-
-    # ----------------------------------------------
     # 2. ONNX latency and throughput
-    # ----------------------------------------------
-
-    batch = X[: min(BATCH_SIZE, len(X))]
-
     durations = []
 
-    for _ in range(BENCHMARK_RUNS):
+    for _ in range(benchmark_runs):
         start = time.perf_counter()
         predict_onnx(session, batch)
         durations.append(time.perf_counter() - start)
@@ -251,21 +214,18 @@ def main():
     average_batch_seconds = float(np.mean(durations))
     p95_batch_seconds = float(np.percentile(durations, 95))
 
-    # Full-dataset inference in batches.
     start = time.perf_counter()
 
-    for offset in range(0, len(X), BATCH_SIZE):
-        predict_onnx(session, X[offset : offset + BATCH_SIZE])
+    for offset in range(0, len(X), batch_size):
+        predict_onnx(session, X[offset : offset + batch_size])
 
     full_inference_seconds = time.perf_counter() - start
 
     throughput = len(X) / full_inference_seconds if full_inference_seconds > 0 else None
 
-    # ----------------------------------------------
     # 3. Optional sklearn vs ONNX consistency
-    # ----------------------------------------------
+    sklearn_path = find_sklearn_model(model_roots)
 
-    sklearn_path = find_sklearn_model()
     consistency = {
         "sklearn_model_found": sklearn_path is not None,
         "checked": False,
@@ -274,7 +234,9 @@ def main():
 
     if sklearn_path is not None:
         try:
-            sklearn_model = load_sklearn_model(sklearn_path)
+            import joblib
+
+            sklearn_model = joblib.load(sklearn_path)
 
             if hasattr(sklearn_model, "predict"):
                 sklearn_predictions = np.asarray(
@@ -285,29 +247,23 @@ def main():
                 onnx_predictions = np.asarray(onnx_outputs[0]).reshape(-1)
 
                 if len(onnx_predictions) == len(sklearn_predictions):
-                    match_rate = float(np.mean(onnx_predictions == sklearn_predictions))
-
                     consistency = {
                         "sklearn_model_found": True,
                         "sklearn_model_path": str(sklearn_path),
                         "checked": True,
-                        "prediction_match_rate": match_rate,
+                        "prediction_match_rate": float(
+                            np.mean(onnx_predictions == sklearn_predictions)
+                        ),
                     }
 
         except Exception as exc:
             consistency["error"] = str(exc)
 
-    # ----------------------------------------------
     # 4. Model size
-    # ----------------------------------------------
-
     model_size_bytes = onnx_path.stat().st_size
     model_size_mb = model_size_bytes / (1024 * 1024)
 
-    # ----------------------------------------------
     # 5. Save report
-    # ----------------------------------------------
-
     report = {
         "step": 18,
         "model": onnx_path.name,
@@ -315,8 +271,8 @@ def main():
         "rows_benchmarked": int(len(X)),
         "feature_count": int(len(feature_columns)),
         "batch_size": int(len(batch)),
-        "warmup_runs": WARMUP_RUNS,
-        "benchmark_runs": BENCHMARK_RUNS,
+        "warmup_runs": warmup_runs,
+        "benchmark_runs": benchmark_runs,
         "onnx_cpu": {
             "average_batch_latency_ms": average_batch_seconds * 1000,
             "p95_batch_latency_ms": p95_batch_seconds * 1000,
@@ -333,9 +289,9 @@ def main():
         "feature_columns": feature_columns,
     }
 
-    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(REPORT_PATH, "w", encoding="utf-8") as file:
+    with open(report_path, "w", encoding="utf-8") as file:
         json.dump(report, file, indent=2)
 
     print("\n========== BENCHMARK RESULTS ==========")
@@ -350,10 +306,16 @@ def main():
             f"{consistency['prediction_match_rate'] * 100:.2f}%"
         )
     else:
-        print("Prediction match:     Not checked (sklearn model unavailable)")
+        print("Prediction match:     Not checked")
 
-    print(f"\nReport saved: {REPORT_PATH}")
+    print(f"\nReport saved: {report_path}")
     print("========== STEP 18 COMPLETED ==========")
+
+    return report
+
+
+def main():
+    benchmark_onnx()
 
 
 if __name__ == "__main__":

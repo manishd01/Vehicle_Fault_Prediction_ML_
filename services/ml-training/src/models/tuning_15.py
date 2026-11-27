@@ -3,6 +3,7 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+import pandas as pd
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
@@ -23,9 +24,8 @@ MAX_TRAIN_ROWS = 100_000
 SEED = 42
 
 
-def save_skipped_metrics(reason, train_df, validation_df):
-    """Save a clear warning when tuning cannot be evaluated reliably."""
-    metrics_path = METRICS_DIR / "random_forest_tuned.json"
+def save_skipped_metrics(reason, train_df, validation_df, metrics_dir):
+    metrics_path = metrics_dir / "random_forest_tuned.json"
 
     metrics = {
         "model": "tuned_random_forest",
@@ -73,26 +73,37 @@ def balanced_sample(dataframe):
         random_state=SEED,
     )
 
-    import pandas as pd
-
     return pd.concat([faults, sampled_normal]).sample(frac=1, random_state=SEED)
 
 
-def main():
+def tune_random_forest(config=None, train_df=None, validation_df=None):
+    config = config or {}
+
+    model_dir = Path(config.get("model_dir", MODEL_DIR))
+    metrics_dir = Path(config.get("metrics_dir", METRICS_DIR))
+    model_dir.mkdir(parents=True, exist_ok=True)
+    metrics_dir.mkdir(parents=True, exist_ok=True)
+
     print("\n========== STEP 15: HYPERPARAMETER TUNING ==========")
-    MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    METRICS_DIR.mkdir(parents=True, exist_ok=True)
 
-    train_df = load_split("train")
-    validation_df = load_split("validation")
+    if train_df is None:
+        train_df = load_split("train")
+    else:
+        train_df = train_df.copy()
 
-    # NEW: Clean and validate target labels before tuning.
+    if validation_df is None:
+        validation_df = load_split("validation")
+    else:
+        validation_df = validation_df.copy()
+
+    # Clean and validate target labels.
     for dataset_name, dataframe in [
         ("training", train_df),
         ("validation", validation_df),
     ]:
-        dataframe[TARGET_COLUMN] = np.asarray(dataframe[TARGET_COLUMN])
-        dataframe[TARGET_COLUMN] = dataframe[TARGET_COLUMN].astype("float64")
+        dataframe[TARGET_COLUMN] = pd.to_numeric(
+            dataframe[TARGET_COLUMN], errors="coerce"
+        )
         dataframe[TARGET_COLUMN] = dataframe[TARGET_COLUMN].replace(
             [np.inf, -np.inf], np.nan
         )
@@ -104,32 +115,30 @@ def main():
                 f"{dataset_name.capitalize()} labels must contain only 0 and 1."
             )
 
-        # NEW: Require both classes in training.
-        train_classes = set(train_df[TARGET_COLUMN].unique())
+    train_classes = set(train_df[TARGET_COLUMN].unique())
+    validation_classes = set(validation_df[TARGET_COLUMN].unique())
 
-        if train_classes != {0, 1}:
-            save_skipped_metrics(
-                "Training data must contain both normal (0) and fault (1) examples.",
-                train_df,
-                validation_df,
-            )
-            print("========== STEP 15 SKIPPED WITH WARNING ==========")
-            return
+    if train_classes != {0, 1}:
+        save_skipped_metrics(
+            "Training data must contain both normal (0) and fault (1) examples.",
+            train_df,
+            validation_df,
+            metrics_dir,
+        )
+        print("========== STEP 15 SKIPPED WITH WARNING ==========")
+        return None
 
-        # NEW: Require both classes in validation for reliable model selection.
-        validation_classes = set(validation_df[TARGET_COLUMN].unique())
-
-        if validation_classes != {0, 1}:
-            save_skipped_metrics(
-                "Validation data must contain both normal (0) and fault (1) examples.",
-                train_df,
-                validation_df,
-            )
-            print("========== STEP 15 SKIPPED WITH WARNING ==========")
-            return
+    if validation_classes != {0, 1}:
+        save_skipped_metrics(
+            "Validation data must contain both normal (0) and fault (1) examples.",
+            train_df,
+            validation_df,
+            metrics_dir,
+        )
+        print("========== STEP 15 SKIPPED WITH WARNING ==========")
+        return None
 
     train_df = balanced_sample(train_df)
-
     feature_columns = get_feature_columns(train_df, validation_df)
 
     X_train = train_df[feature_columns].replace([np.inf, -np.inf], np.nan)
@@ -168,12 +177,7 @@ def main():
 
         model.fit(X_train, y_train)
 
-        # probabilities = model.predict_proba(X_validation)[:, 1]
-        model_classes = model.named_steps["classifier"].classes_
-        probability_columns = model.predict_proba(X_validation)
-
-        fault_column = list(model_classes).index(1)
-        probabilities = probability_columns[:, fault_column]
+        probabilities = model.predict_proba(X_validation)[:, 1]
         pr_auc = average_precision_score(y_validation, probabilities)
         roc_auc = roc_auc_score(y_validation, probabilities)
 
@@ -194,8 +198,8 @@ def main():
                 "selection_metric": "validation_pr_auc",
             }
 
-    model_path = MODEL_DIR / "random_forest_tuned.joblib"
-    metrics_path = METRICS_DIR / "random_forest_tuned.json"
+    model_path = model_dir / "random_forest_tuned.joblib"
+    metrics_path = metrics_dir / "random_forest_tuned.json"
 
     joblib.dump(best_model, model_path)
 
@@ -207,6 +211,17 @@ def main():
     print(f"Model saved: {model_path}")
     print(f"Metrics saved: {metrics_path}")
     print("========== STEP 15 COMPLETED ==========")
+
+    return {
+        "model": best_model,
+        "metrics": best_metrics,
+        "model_path": str(model_path),
+        "metrics_path": str(metrics_path),
+    }
+
+
+def main():
+    tune_random_forest()
 
 
 if __name__ == "__main__":
